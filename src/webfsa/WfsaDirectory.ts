@@ -1,76 +1,42 @@
-import { AbstractDirectory, util } from "isomorphic-fs";
-import { convertError, WfsaFileSystem } from "./WfsaFileSystem";
+import { AbstractDirectory } from "isomorphic-fs";
+import { DIR_SEPARATOR, getName } from "isomorphic-fs/lib/util";
+import { WfsaFileSystem } from "./WfsaFileSystem";
 
 export class WfsaDirectory extends AbstractDirectory {
-  constructor(private wfs: WfsaFileSystem, path: string) {
+  constructor(
+    private wfs: WfsaFileSystem,
+    path: string,
+    private parent: FileSystemDirectoryHandle,
+    private directoryHandle: FileSystemDirectoryHandle
+  ) {
     super(wfs, path);
   }
 
   public async _list(): Promise<string[]> {
-    const fs = await this.wfs._getFS();
-    return new Promise<string[]>((resolve, reject) => {
-      const fullPath = util.joinPaths(this.fs.repository, this.path);
-      fs.root.getDirectory(
-        fullPath,
-        { create: false },
-        (directory) => {
-          const reader = directory.createReader();
-          reader.readEntries(
-            (entries) => {
-              const list: string[] = [];
-              const from = this.fs.repository.length;
-              for (const entry of entries) {
-                list.push(entry.fullPath.substr(from));
-              }
-              resolve(list);
-            },
-            (err) => reject(convertError(this.fs.repository, this.path, err))
-          );
-        },
-        (err) => reject(convertError(this.fs.repository, this.path, err))
-      );
-    });
+    const paths: string[] = [];
+    const entries = this.directoryHandle.entries();
+    const result = await entries.next();
+    while (!result.done) {
+      const [, handle] = result.value;
+      const parts = (await this.directoryHandle.resolve(handle)) as string[];
+      const path = DIR_SEPARATOR + parts.join(DIR_SEPARATOR);
+      paths.push(path);
+    }
+    return paths;
   }
 
   public async _mkcol(): Promise<void> {
-    const fs = await this.wfs._getFS();
-    return new Promise<void>((resolve, reject) => {
-      const fullPath = util.joinPaths(this.fs.repository, this.path);
-      fs.root.getDirectory(
-        fullPath,
-        { create: true },
-        () => resolve(),
-        (err) => reject(convertError(this.fs.repository, this.path, err))
-      );
-    });
+    const name = getName(this.path);
+    await this.parent.getDirectoryHandle(name, { create: true });
   }
 
-  public _rmdir(): Promise<void> {
-    return this._rd(false);
+  public async _rmdir(): Promise<void> {
+    const name = getName(this.path);
+    await this.parent.removeEntry(name);
   }
 
-  public _rmdirRecursively(): Promise<void> {
-    return this._rd(true);
-  }
-
-  private async _rd(recursive: boolean): Promise<void> {
-    const fs = await this.wfs._getFS();
-    return new Promise<void>((resolve, reject) => {
-      const fullPath = util.joinPaths(this.fs.repository, this.path);
-      fs.root.getDirectory(
-        fullPath,
-        { create: false },
-        (entry) => {
-          const handle = (err: FileError) =>
-            reject(convertError(this.fs.repository, this.path, err));
-          if (recursive) {
-            entry.removeRecursively(resolve, handle);
-          } else {
-            entry.remove(resolve, handle);
-          }
-        },
-        (err) => reject(convertError(this.fs.repository, this.path, err))
-      );
-    });
+  public async _rmdirRecursively(): Promise<void> {
+    const name = getName(this.path);
+    await this.parent.removeEntry(name, { recursive: true });
   }
 }

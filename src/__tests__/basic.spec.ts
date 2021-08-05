@@ -3,7 +3,7 @@ import { WfsaFileSystem } from "../webfsa/WfsaFileSystem";
 
 const { toArrayBuffer, toString } = util;
 
-const fs = new WfsaFileSystem("/isomorphic-fs-test", 50 * 1024 * 1024);
+const fs = new WfsaFileSystem();
 
 describe("basic", () => {
   beforeAll(async () => {

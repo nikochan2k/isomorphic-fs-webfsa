@@ -1,187 +1,83 @@
 import {
-  AbortError,
   AbstractFileSystem,
-  AbstractFileSystemError,
   Directory,
-  EncodingError,
   File,
   FileSystemOptions,
   HeadOptions,
-  InvalidModificationError,
-  InvalidStateError,
-  NoModificationAllowedError,
   NotFoundError,
-  NotReadableError,
-  NotSupportedError,
   PatchOptions,
-  PathExistsError,
   Props,
-  QuotaExceededError,
-  SecurityError,
   Stats,
-  SyntaxError,
-  TypeMismatchError,
   URLType,
-  util,
 } from "isomorphic-fs";
+import { DIR_SEPARATOR } from "isomorphic-fs/lib/util";
 import { WfsaDirectory } from "./WfsaDirectory";
 import { WfsaFile } from "./WfsaFile";
 
-export function convertError(repository: string, path: string, err: any) {
-  if (err instanceof AbstractFileSystemError) {
-    return err;
-  }
-  let code = 0;
-  let name = "";
-  if (err) {
-    const e = err as any;
-    if (e.code) {
-      code = e.code;
-    }
-    name = "";
-    if (e.name) {
-      name = e.name;
-    }
-    let message = "";
-    if (e.message) {
-      message = e.message;
-    }
-    console.debug(repository, path, code, name, message);
-  }
-  if (name) {
-    switch (name) {
-      case "NotFoundError":
-        return new NotFoundError(repository, path, err);
-      case "SecurityError":
-        return new SecurityError(repository, path, err);
-      case "AbortError":
-        return new AbortError(repository, path, err);
-      case "NotReadableError":
-        return new NotReadableError(repository, path, err);
-      case "EncodingError":
-        return new EncodingError(repository, path, err);
-      case "NoModificationAllowedError":
-        return new NoModificationAllowedError(repository, path, err);
-      case "InvalidStateError":
-        return new InvalidStateError(repository, path, err);
-      case "SyntaxError":
-        return new SyntaxError(repository, path, err);
-      case "InvalidModificationError":
-        return new InvalidModificationError(repository, path, err);
-      case "QuotaExceededError":
-        return new QuotaExceededError(repository, path, err);
-      case "TypeMismatchError":
-        return new TypeMismatchError(repository, path, err);
-      case "PathExistsError":
-        return new PathExistsError(repository, path, err);
-    }
-  }
-  if (code) {
-    switch (code) {
-      case 1: // NOT_FOUND_ERR
-        return new NotFoundError(repository, path, err);
-      case 2: // SECURITY_ERR
-        return new SecurityError(repository, path, err);
-      case 3: // ABORT_ERR:
-        return new AbortError(repository, path, err);
-      case 4: // NOT_READABLE_ERR:
-        return new NotReadableError(repository, path, err);
-      case 5: // ENCODING_ERR:
-        return new EncodingError(repository, path, err);
-      case 6: // NO_MODIFICATION_ALLOWED_ERR:
-        return new NoModificationAllowedError(repository, path, err);
-      case 7: // INVALID_STATE_ERR:
-        return new InvalidStateError(repository, path, err);
-      case 8: // SYNTAX_ERR:
-        return new SyntaxError(repository, path, err);
-      case 9: // INVALID_MODIFICATION_ERR:
-        return new InvalidModificationError(repository, path, err);
-      case 10: // QUOTA_EXCEEDED_ERR:
-        return new QuotaExceededError(repository, path, err);
-      case 11: // TYPE_MISMATCH_ERR:
-        return new TypeMismatchError(repository, path, err);
-      case 12: // PATH_EXISTS_ERR:
-        return new PathExistsError(repository, path, err);
-    }
-  }
-  return new NotSupportedError(repository, path, err);
-}
-
-const requestFileSystem =
-  window.requestFileSystem || (window as any).webkitRequestFileSystem;
 export class WfsaFileSystem extends AbstractFileSystem {
-  private fs?: FileSystem;
-  private rootDir: string;
+  private root?: FileSystemDirectoryHandle;
 
-  constructor(
-    rootDir: string,
-    private size: number,
-    options?: FileSystemOptions
-  ) {
-    super(util.normalizePath(rootDir), options);
-    this.rootDir = this.repository;
+  constructor(options?: FileSystemOptions) {
+    super("", options);
   }
 
-  public async _getFS() {
-    if (this.fs) {
-      return this.fs;
+  public async _getFileSystemHandles(
+    path: string,
+    isFile?: boolean
+  ): Promise<{
+    parent: FileSystemDirectoryHandle;
+    directoryHandle?: FileSystemDirectoryHandle;
+    fileHandle?: FileSystemFileHandle;
+  } | null> {
+    const parts = path.split(DIR_SEPARATOR).filter((part) => !!part);
+    if (parts.length === 0) {
+      return null;
     }
-    if ((window as any).webkitStorageInfo) {
-      await new Promise<void>((resolve, reject) => {
-        const webkitStorageInfo = (window as any).webkitStorageInfo;
-        webkitStorageInfo.requestQuota(
-          window.PERSISTENT,
-          this.size,
-          () => resolve(),
-          (e: any) => reject(convertError(this.repository, "", e))
-        );
-      });
-    } else if ((navigator as any).webkitPersistentStorage) {
-      await new Promise<void>((resolve, reject) => {
-        const webkitPersistentStorage = (navigator as any)
-          .webkitPersistentStorage;
-        webkitPersistentStorage.requestQuota(
-          this.size,
-          () => resolve(),
-          (e: any) => reject(convertError(this.repository, "", e))
-        );
-      });
+    let parent = await this._getRoot();
+    let i = 0;
+    let part: string | undefined;
+    for (let end = parts.length - 1; i <= end; i++) {
+      part = parts[i] as string;
+      parent = await parent.getDirectoryHandle(part);
     }
-    const fs = await new Promise<FileSystem>((resolve, reject) => {
-      requestFileSystem(
-        window.PERSISTENT,
-        this.size,
-        (fs) => resolve(fs),
-        (err) => reject(convertError(this.repository, "", err))
-      );
-    });
-    await new Promise<void>((resolve, reject) => {
-      fs.root.getDirectory(
-        this.repository,
-        { create: true },
-        () => resolve(),
-        (err) => reject(convertError(this.repository, "", err))
-      );
-    });
-    this.fs = fs;
+    part = parts[i] as string;
+    if (isFile === true) {
+      return { parent, fileHandle: await parent.getFileHandle(part) };
+    } else if (isFile === false) {
+      return { parent, directoryHandle: await parent.getDirectoryHandle(part) };
+    } else {
+      const file = await parent.getFileHandle(part);
+      if (file.kind === "file") {
+        return { parent, fileHandle: file };
+      }
+      return { parent, directoryHandle: await parent.getDirectoryHandle(part) };
+    }
+  }
+
+  public async _getRoot() {
+    if (this.root) {
+      return this.root;
+    }
+    const fs = await window.showDirectoryPicker();
+    this.root = fs;
     return fs;
   }
 
   public async _head(path: string, _options: HeadOptions): Promise<Stats> {
-    const entry = await this.getEntry(path);
-    return new Promise<Stats>((resolve, reject) => {
-      entry.getMetadata(
-        (metadata) => {
-          const modified = metadata.modificationTime.getTime();
-          if (entry.isFile) {
-            resolve({ modified, size: metadata.size });
-          } else {
-            resolve({ modified });
-          }
-        },
-        (err) => reject(convertError(this.repository, path, err))
-      );
-    });
+    const handles = await this._getFileSystemHandles(path);
+    if (!handles) {
+      throw new NotFoundError(this.repository, path);
+    }
+    const { fileHandle } = handles;
+    if (fileHandle) {
+      const file = await fileHandle.getFile();
+      return {
+        modified: file.lastModified,
+        size: file.size,
+      };
+    } else {
+      return {};
+    }
   }
 
   public _patch(
@@ -193,36 +89,27 @@ export class WfsaFileSystem extends AbstractFileSystem {
   }
 
   public async getDirectory(path: string): Promise<Directory> {
-    return new WfsaDirectory(this, path);
+    const handles = await this._getFileSystemHandles(path, true);
+    if (!handles || !handles.directoryHandle) {
+      throw new NotFoundError(this.repository, path);
+    }
+    const { parent, directoryHandle } = handles;
+    return new WfsaDirectory(this, path, parent, directoryHandle);
   }
 
   public async getFile(path: string): Promise<File> {
-    return new WfsaFile(this, path);
-  }
-
-  public async toURL(path: string, urlType: URLType = "GET"): Promise<string> {
-    if (urlType !== "GET") {
-      throw new NotSupportedError(
-        this.repository,
-        path,
-        `"${urlType}" is not supported`
-      );
+    const handles = await this._getFileSystemHandles(path, true);
+    if (!handles || !handles.fileHandle) {
+      throw new NotFoundError(this.repository, path);
     }
-    const entry = await this.getEntry(path);
-    return entry.toURL();
+    const { parent, fileHandle } = handles;
+    return new WfsaFile(this, path, parent, fileHandle);
   }
 
-  private async getEntry(path: string) {
-    const fs = await this._getFS();
-    return new Promise<FileEntry | DirectoryEntry>((resolve, reject) => {
-      let rejected: FileError;
-      const handle = (err: FileError) => {
-        if (rejected) reject(convertError(this.repository, path, rejected));
-        rejected = err;
-      };
-      const fullPath = util.joinPaths(this.rootDir, path);
-      fs.root.getFile(fullPath, { create: false }, resolve, handle);
-      fs.root.getDirectory(fullPath, { create: false }, resolve, handle);
-    });
+  public async toURL(
+    _path: string,
+    _urlType: URLType = "GET"
+  ): Promise<string> {
+    throw new Error("Method not implemented.");
   }
 }
