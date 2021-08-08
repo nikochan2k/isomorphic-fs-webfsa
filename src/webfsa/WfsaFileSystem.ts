@@ -29,11 +29,15 @@ export class WfsaFileSystem extends AbstractFileSystem {
     directoryHandle?: FileSystemDirectoryHandle;
     fileHandle?: FileSystemFileHandle;
   } | null> {
+    let parent = await this._getRoot();
+    if (path === DIR_SEPARATOR) {
+      return { parent, directoryHandle: parent };
+    }
     const parts = path.split(DIR_SEPARATOR).filter((part) => !!part);
+    console.log(parts);
     if (parts.length === 0) {
       return null;
     }
-    let parent = await this._getRoot();
     let i = 0;
     let part: string | undefined;
     for (let end = parts.length - 1; i <= end; i++) {
@@ -58,9 +62,9 @@ export class WfsaFileSystem extends AbstractFileSystem {
     if (this.root) {
       return this.root;
     }
-    const fs = await window.showDirectoryPicker();
-    this.root = fs;
-    return fs;
+    const root = await window.showDirectoryPicker();
+    this.root = root;
+    return root;
   }
 
   public async _head(path: string, _options: HeadOptions): Promise<Stats> {

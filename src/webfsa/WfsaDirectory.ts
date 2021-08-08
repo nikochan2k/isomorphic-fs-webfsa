@@ -1,4 +1,4 @@
-import { AbstractDirectory } from "isomorphic-fs";
+import { AbstractDirectory, NoModificationAllowedError } from "isomorphic-fs";
 import { DIR_SEPARATOR, getName } from "isomorphic-fs/lib/util";
 import { WfsaFileSystem } from "./WfsaFileSystem";
 
@@ -26,16 +26,34 @@ export class WfsaDirectory extends AbstractDirectory {
   }
 
   public async _mkcol(): Promise<void> {
+    if (this.path === DIR_SEPARATOR) {
+      // root directory
+      return;
+    }
     const name = getName(this.path);
     await this.parent.getDirectoryHandle(name, { create: true });
   }
 
   public async _rmdir(): Promise<void> {
+    if (this.path === DIR_SEPARATOR) {
+      throw new NoModificationAllowedError(
+        this.fs.repository,
+        this.path,
+        "Cannot delete root directory"
+      );
+    }
     const name = getName(this.path);
     await this.parent.removeEntry(name);
   }
 
   public async _rmdirRecursively(): Promise<void> {
+    if (this.path === DIR_SEPARATOR) {
+      throw new NoModificationAllowedError(
+        this.fs.repository,
+        this.path,
+        "Cannot delete root directory"
+      );
+    }
     const name = getName(this.path);
     await this.parent.removeEntry(name, { recursive: true });
   }
