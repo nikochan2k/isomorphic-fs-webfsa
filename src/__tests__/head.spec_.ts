@@ -1,7 +1,7 @@
 import { NotFoundError } from "isomorphic-fs";
 import { WfsaFileSystem } from "../webfsa/WfsaFileSystem";
 
-const fs = new WfsaFileSystem("/isomorphic-fs-test", 50 * 1024 * 1024);
+const fs = new WfsaFileSystem();
 
 describe("head", () => {
   beforeAll(async () => {

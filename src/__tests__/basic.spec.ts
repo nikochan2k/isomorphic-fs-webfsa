@@ -20,6 +20,7 @@ describe("basic", () => {
     expect(paths.length).toBe(0);
   });
 
+  /*
   it("add empty file", async () => {
     const file = await fs.getFile("/empty.txt");
     try {
@@ -185,4 +186,5 @@ describe("basic", () => {
     const folder3List = await folder3.ls();
     expect(0 <= folder3List.indexOf("/folder3/sample2.txt")).toBe(true);
   });
+  */
 });

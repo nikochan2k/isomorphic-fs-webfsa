@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Jasmine Spec Runner v3.8.0</title>
+
+    <link
+      rel="shortcut icon"
+      type="image/png"
+      href="jasmine-standalone-3.8.0/lib/jasmine-3.8.0/jasmine_favicon.png"
+    />
+    <link
+      rel="stylesheet"
+      href="jasmine-standalone-3.8.0/lib/jasmine-3.8.0/jasmine.css"
+    />
+
+    <script src="jasmine-standalone-3.8.0/lib/jasmine-3.8.0/jasmine.js"></script>
+    <script src="jasmine-standalone-3.8.0/lib/jasmine-3.8.0/jasmine-html.js"></script>
+    <script src="jasmine-standalone-3.8.0/lib/jasmine-3.8.0/boot.js"></script>
+
+    <script src="dist/basic.spec.js"></script>
+  </head>
+
+  <body>
+    <button id="boot">test</button>
+    <script>
+      const button = document.getElementById("boot");
+      button.addEventListener("click", () => {
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+        jasmine.execute();
+      });
+    </script>
+  </body>
+</html>

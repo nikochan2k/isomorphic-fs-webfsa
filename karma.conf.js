@@ -11,7 +11,7 @@ module.exports = function (config) {
     browsers: ["chrome_without_security"],
     customLaunchers: {
       chrome_without_security: {
-        base: "ChromeHeadless",
+        base: "Chrome",
         flags: [
           "--no-sandbox",
           "--disable-gpu",
