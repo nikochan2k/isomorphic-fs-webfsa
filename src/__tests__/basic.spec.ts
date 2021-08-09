@@ -20,30 +20,36 @@ describe("basic", () => {
     expect(paths.length).toBe(0);
   });
 
-  /*
   it("add empty file", async () => {
     const file = await fs.getFile("/empty.txt");
+    console.log(1);
     try {
       await file.stat();
       fail("Found file: " + file.path);
     } catch (e) {
-      expect(e).toBeInstanceOf(NotFoundError);
+      expect(e.code).toBe(NotFoundError.code);
     }
+    console.log(2);
     const buffer = toArrayBuffer("");
     const ws = await file.createWriteStream();
+    console.log(3);
     await ws.write(buffer);
+    console.log(4);
     await ws.close();
+    console.log(5);
     const stats = await file.stat();
+    console.log(6);
     expect(stats.size).toBe(0);
   });
 
+  /*
   it("add text file", async () => {
     const file = await fs.getFile("/test.txt");
     try {
       await file.stat();
       fail("Found file: " + file.path);
     } catch (e) {
-      expect(e).toBeInstanceOf(NotFoundError);
+      expect(e.code).toBe(NotFoundError.code);
     }
     const buffer = toArrayBuffer("test");
     const ws = await file.createWriteStream();
@@ -111,7 +117,7 @@ describe("basic", () => {
       await folder.stat();
       fail("Found folder: " + folder.path);
     } catch (e) {
-      expect(e).toBeInstanceOf(NotFoundError);
+      expect(e.code).toBe(NotFoundError.code);
     }
     await folder.mkdir();
     await folder.stat();
@@ -130,7 +136,7 @@ describe("basic", () => {
       await file.stat();
       fail("Found file: " + file.path);
     } catch (e) {
-      expect(e).toBeInstanceOf(NotFoundError);
+      expect(e.code).toBe(NotFoundError.code);
     }
     const ws = await file.createWriteStream();
     const outBuf = toArrayBuffer("Sample");

@@ -1,24 +1,27 @@
-import { AbstractDirectory, NoModificationAllowedError } from "isomorphic-fs";
-import { DIR_SEPARATOR, getName } from "isomorphic-fs/lib/util";
+import {
+  AbstractDirectory,
+  createError,
+  NoModificationAllowedError,
+} from "isomorphic-fs";
+import { DIR_SEPARATOR } from "isomorphic-fs/lib/util";
 import { WfsaFileSystem } from "./WfsaFileSystem";
 
 export class WfsaDirectory extends AbstractDirectory {
-  constructor(
-    private wfs: WfsaFileSystem,
-    path: string,
-    private parent: FileSystemDirectoryHandle,
-    private directoryHandle: FileSystemDirectoryHandle
-  ) {
+  constructor(private wfs: WfsaFileSystem, path: string) {
     super(wfs, path);
   }
 
   public async _list(): Promise<string[]> {
+    const directoryHandle = await this._getDirectoryHandle(false);
     const paths: string[] = [];
-    const entries = this.directoryHandle.entries();
+    const entries = directoryHandle.entries();
     const result = await entries.next();
     while (!result.done) {
       const [, handle] = result.value;
-      const parts = (await this.directoryHandle.resolve(handle)) as string[];
+      const parts = await directoryHandle.resolve(handle);
+      if (!parts) {
+        continue;
+      }
       const path = DIR_SEPARATOR + parts.join(DIR_SEPARATOR);
       paths.push(path);
     }
@@ -27,34 +30,42 @@ export class WfsaDirectory extends AbstractDirectory {
 
   public async _mkcol(): Promise<void> {
     if (this.path === DIR_SEPARATOR) {
-      // root directory
       return;
     }
-    const name = getName(this.path);
-    await this.parent.getDirectoryHandle(name, { create: true });
+    await this._getDirectoryHandle(true);
   }
 
   public async _rmdir(): Promise<void> {
     if (this.path === DIR_SEPARATOR) {
-      throw new NoModificationAllowedError(
-        this.fs.repository,
-        this.path,
-        "Cannot delete root directory"
-      );
+      throw createError({
+        name: NoModificationAllowedError.name,
+        repository: this.fs.repository,
+        path: this.path,
+        e: "Cannot delete root directory",
+      });
     }
-    const name = getName(this.path);
-    await this.parent.removeEntry(name);
+    const { parent, name } = await this.wfs._getParent(this.path);
+    await parent.removeEntry(name);
   }
 
   public async _rmdirRecursively(): Promise<void> {
     if (this.path === DIR_SEPARATOR) {
-      throw new NoModificationAllowedError(
-        this.fs.repository,
-        this.path,
-        "Cannot delete root directory"
-      );
+      throw createError({
+        name: NoModificationAllowedError.name,
+        repository: this.fs.repository,
+        path: this.path,
+        e: "Cannot delete root directory",
+      });
     }
-    const name = getName(this.path);
-    await this.parent.removeEntry(name, { recursive: true });
+    const { parent, name } = await this.wfs._getParent(this.path);
+    await parent.removeEntry(name, { recursive: true });
+  }
+
+  private async _getDirectoryHandle(create: boolean) {
+    if (this.path === DIR_SEPARATOR) {
+      return this.wfs._getRoot();
+    }
+    const { parent, name } = await this.wfs._getParent(this.path);
+    return parent.getDirectoryHandle(name, { create });
   }
 }

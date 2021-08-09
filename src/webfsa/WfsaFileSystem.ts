@@ -1,5 +1,6 @@
 import {
   AbstractFileSystem,
+  createError,
   Directory,
   File,
   FileSystemOptions,
@@ -8,6 +9,7 @@ import {
   PatchOptions,
   Props,
   Stats,
+  SyntaxError,
   URLType,
 } from "isomorphic-fs";
 import { DIR_SEPARATOR } from "isomorphic-fs/lib/util";
@@ -21,41 +23,24 @@ export class WfsaFileSystem extends AbstractFileSystem {
     super("", options);
   }
 
-  public async _getFileSystemHandles(
-    path: string,
-    isFile?: boolean
-  ): Promise<{
-    parent: FileSystemDirectoryHandle;
-    directoryHandle?: FileSystemDirectoryHandle;
-    fileHandle?: FileSystemFileHandle;
-  } | null> {
-    let parent = await this._getRoot();
-    if (path === DIR_SEPARATOR) {
-      return { parent, directoryHandle: parent };
-    }
+  public async _getParent(path: string) {
     const parts = path.split(DIR_SEPARATOR).filter((part) => !!part);
-    console.log(parts);
     if (parts.length === 0) {
-      return null;
+      console.log(path, new Error().stack);
+      throw createError({
+        name: SyntaxError.name,
+        repository: this.repository,
+        path,
+      });
     }
+    let parent = await this._getRoot();
     let i = 0;
     let part: string | undefined;
     for (let end = parts.length - 1; i <= end; i++) {
       part = parts[i] as string;
       parent = await parent.getDirectoryHandle(part);
     }
-    part = parts[i] as string;
-    if (isFile === true) {
-      return { parent, fileHandle: await parent.getFileHandle(part) };
-    } else if (isFile === false) {
-      return { parent, directoryHandle: await parent.getDirectoryHandle(part) };
-    } else {
-      const file = await parent.getFileHandle(part);
-      if (file.kind === "file") {
-        return { parent, fileHandle: file };
-      }
-      return { parent, directoryHandle: await parent.getDirectoryHandle(part) };
-    }
+    return { parent, name: parts[parts.length - 1] as string };
   }
 
   public async _getRoot() {
@@ -68,20 +53,21 @@ export class WfsaFileSystem extends AbstractFileSystem {
   }
 
   public async _head(path: string, _options: HeadOptions): Promise<Stats> {
-    const handles = await this._getFileSystemHandles(path);
-    if (!handles) {
-      throw new NotFoundError(this.repository, path);
-    }
-    const { fileHandle } = handles;
-    if (fileHandle) {
+    const { parent, name } = await this._getParent(path);
+    try {
+      const fileHandle = await parent.getFileHandle(name);
       const file = await fileHandle.getFile();
       return {
         modified: file.lastModified,
         size: file.size,
       };
-    } else {
-      return {};
+    } catch (e) {
+      if (e.code === NotFoundError.code) {
+        throw e;
+      }
     }
+    await parent.getDirectoryHandle(name);
+    return {};
   }
 
   public _patch(
@@ -93,21 +79,11 @@ export class WfsaFileSystem extends AbstractFileSystem {
   }
 
   public async getDirectory(path: string): Promise<Directory> {
-    const handles = await this._getFileSystemHandles(path, true);
-    if (!handles || !handles.directoryHandle) {
-      throw new NotFoundError(this.repository, path);
-    }
-    const { parent, directoryHandle } = handles;
-    return new WfsaDirectory(this, path, parent, directoryHandle);
+    return new WfsaDirectory(this, path);
   }
 
   public async getFile(path: string): Promise<File> {
-    const handles = await this._getFileSystemHandles(path, true);
-    if (!handles || !handles.fileHandle) {
-      throw new NotFoundError(this.repository, path);
-    }
-    const { parent, fileHandle } = handles;
-    return new WfsaFile(this, path, parent, fileHandle);
+    return new WfsaFile(this, path);
   }
 
   public async toURL(

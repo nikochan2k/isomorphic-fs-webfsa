@@ -22,7 +22,7 @@ describe("list", () => {
       await fs.list("/nothing");
       fail("/nothing exists");
     } catch (e) {
-      expect(e).toBeInstanceOf(NotFoundError);
+      expect(e.code).toBe(NotFoundError.code);
     }
   });
 
@@ -32,7 +32,7 @@ describe("list", () => {
       await fs.list("/file_list");
       fail("/nothing exists");
     } catch (e) {
-      expect(e).toBeInstanceOf(TypeMismatchError);
+      expect(e.code).toBe(TypeMismatchError.code);
     }
   });
 });
