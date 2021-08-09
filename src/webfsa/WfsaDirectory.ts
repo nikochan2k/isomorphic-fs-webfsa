@@ -3,7 +3,7 @@ import {
   createError,
   NoModificationAllowedError,
 } from "isomorphic-fs";
-import { DIR_SEPARATOR } from "isomorphic-fs/lib/util";
+import { DIR_SEPARATOR, joinPaths } from "isomorphic-fs/lib/util";
 import { WfsaFileSystem } from "./WfsaFileSystem";
 
 export class WfsaDirectory extends AbstractDirectory {
@@ -17,14 +17,8 @@ export class WfsaDirectory extends AbstractDirectory {
     const entries = directoryHandle.entries();
     let result = await entries.next();
     while (!result.done) {
-      const [, handle] = result.value;
-      const parts = await directoryHandle.resolve(handle);
-      if (!parts) {
-        result = await entries.next();
-        continue;
-      }
-      const path = DIR_SEPARATOR + parts.join(DIR_SEPARATOR);
-      paths.push(path);
+      const [name] = result.value;
+      paths.push(joinPaths(this.path, name));
       result = await entries.next();
     }
     return paths;
