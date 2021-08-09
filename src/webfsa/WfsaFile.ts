@@ -10,28 +10,32 @@ import { WfsaReadStream } from "./WfsaReadStream";
 import { WfsaWriteStream } from "./WfsaWriteStream";
 
 export class WfsaFile extends AbstractFile {
+  private writeStream?: WfsaWriteStream;
+
   constructor(public wfs: WfsaFileSystem, path: string) {
     super(wfs, path);
+  }
+
+  public async _closeWriteStream() {
+    if (!this.writeStream) {
+      return false;
+    }
+    await this.writeStream.close();
+    return true;
   }
 
   public async _createReadStream(
     options: OpenOptions
   ): Promise<AbstractReadStream> {
-    const { parent, name } = await this.wfs._getParent(this.path);
-    const fileHandle = await parent.getFileHandle(name);
-    const file = await fileHandle.getFile();
-    return new WfsaReadStream(this, file, options);
+    return new WfsaReadStream(this, options);
   }
 
   public async _createWriteStream(
     options: OpenWriteOptions
   ): Promise<AbstractWriteStream> {
-    const { parent, name } = await this.wfs._getParent(this.path);
-    const fileHandle = await parent.getFileHandle(name, { create: true });
-    const writable = await fileHandle.createWritable({
-      keepExistingData: true,
-    });
-    return new WfsaWriteStream(this, writable, options);
+    await this._closeWriteStream();
+    this.writeStream = new WfsaWriteStream(this, options);
+    return this.writeStream;
   }
 
   public async _rm(): Promise<void> {

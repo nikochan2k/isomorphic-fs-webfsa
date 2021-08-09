@@ -22,27 +22,20 @@ describe("basic", () => {
 
   it("add empty file", async () => {
     const file = await fs.getFile("/empty.txt");
-    console.log(1);
     try {
       await file.stat();
       fail("Found file: " + file.path);
     } catch (e) {
       expect(e.code).toBe(NotFoundError.code);
     }
-    console.log(2);
     const buffer = toArrayBuffer("");
     const ws = await file.createWriteStream();
-    console.log(3);
     await ws.write(buffer);
-    console.log(4);
     await ws.close();
-    console.log(5);
     const stats = await file.stat();
-    console.log(6);
     expect(stats.size).toBe(0);
   });
 
-  /*
   it("add text file", async () => {
     const file = await fs.getFile("/test.txt");
     try {
@@ -71,28 +64,38 @@ describe("basic", () => {
   it("continuous read and write", async () => {
     const file = await fs.getFile("/otani.txt");
 
-    const ws = await file.createWriteStream();
+    console.log(1);
+    let ws = await file.createWriteStream();
     await ws.write(toArrayBuffer("大谷"));
     await ws.write(toArrayBuffer("翔平"));
 
+    console.log(2);
     const rs = await file.createReadStream();
     let buffer = (await rs.read(6)) as ArrayBuffer;
     let text = toString(buffer);
     expect(text).toBe("大谷");
 
+    console.log(3);
     await rs.seek(6, SeekOrigin.Begin);
     buffer = (await rs.read()) as ArrayBuffer;
     text = toString(buffer);
     expect(text).toBe("翔平");
 
+    console.log(4);
+    ws = await file.createWriteStream({ append: false, create: false });
+    console.log(41);
     await ws.seek(0, SeekOrigin.End);
+    console.log(42);
     await ws.write(toArrayBuffer("ホームラン"));
+    console.log(43);
 
+    console.log(5);
     await rs.seek(0, SeekOrigin.Begin);
     buffer = (await rs.read()) as ArrayBuffer;
     text = toString(buffer);
     expect(text).toBe("大谷翔平ホームラン");
 
+    console.log(6);
     await rs.seek(0, SeekOrigin.Begin);
     await rs.read(6);
     await rs.seek(6, SeekOrigin.Current);
@@ -104,6 +107,7 @@ describe("basic", () => {
     await rs.close();
   });
 
+  /*
   it("mkdir test", async () => {
     const dir = await fs.getDirectory("/");
     let dirs = await dir.readdir();
