@@ -15,15 +15,17 @@ export class WfsaDirectory extends AbstractDirectory {
     const directoryHandle = await this._getDirectoryHandle(false);
     const paths: string[] = [];
     const entries = directoryHandle.entries();
-    const result = await entries.next();
+    let result = await entries.next();
     while (!result.done) {
       const [, handle] = result.value;
       const parts = await directoryHandle.resolve(handle);
       if (!parts) {
+        result = await entries.next();
         continue;
       }
       const path = DIR_SEPARATOR + parts.join(DIR_SEPARATOR);
       paths.push(path);
+      result = await entries.next();
     }
     return paths;
   }

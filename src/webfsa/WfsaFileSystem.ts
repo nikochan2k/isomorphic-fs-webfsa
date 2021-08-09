@@ -26,7 +26,6 @@ export class WfsaFileSystem extends AbstractFileSystem {
   public async _getParent(path: string) {
     const parts = path.split(DIR_SEPARATOR).filter((part) => !!part);
     if (parts.length === 0) {
-      console.log(path, new Error().stack);
       throw createError({
         name: SyntaxError.name,
         repository: this.repository,
@@ -34,13 +33,12 @@ export class WfsaFileSystem extends AbstractFileSystem {
       });
     }
     let parent = await this._getRoot();
-    let i = 0;
-    let part: string | undefined;
-    for (let end = parts.length - 1; i <= end; i++) {
-      part = parts[i] as string;
+    let end = parts.length - 1;
+    for (let i = 0; i < end; i++) {
+      const part = parts[i] as string;
       parent = await parent.getDirectoryHandle(part);
     }
-    return { parent, name: parts[parts.length - 1] as string };
+    return { parent, name: parts[end] as string };
   }
 
   public async _getRoot() {
@@ -53,6 +51,9 @@ export class WfsaFileSystem extends AbstractFileSystem {
   }
 
   public async _head(path: string, _options: HeadOptions): Promise<Stats> {
+    if (path === DIR_SEPARATOR) {
+      return {};
+    }
     const { parent, name } = await this._getParent(path);
     try {
       const fileHandle = await parent.getFileHandle(name);

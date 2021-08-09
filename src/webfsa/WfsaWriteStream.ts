@@ -10,13 +10,16 @@ export class WfsaWriteStream extends AbstractWriteStream {
     super(wf, options);
   }
 
-  public async _close(): Promise<void> {}
+  public async _close(): Promise<void> {
+    await this.writable.close();
+  }
 
   public async _truncate(size: number): Promise<void> {
     await this.writable.truncate(size);
   }
 
   public async _write(buffer: ArrayBuffer | Uint8Array): Promise<void> {
+    console.log("_write", buffer.byteLength);
     await this.writable.write(buffer);
   }
 
