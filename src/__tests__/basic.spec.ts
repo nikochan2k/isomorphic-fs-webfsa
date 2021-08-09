@@ -64,38 +64,29 @@ describe("basic", () => {
   it("continuous read and write", async () => {
     const file = await fs.getFile("/otani.txt");
 
-    console.log(1);
     let ws = await file.createWriteStream();
     await ws.write(toArrayBuffer("大谷"));
     await ws.write(toArrayBuffer("翔平"));
 
-    console.log(2);
     const rs = await file.createReadStream();
     let buffer = (await rs.read(6)) as ArrayBuffer;
     let text = toString(buffer);
     expect(text).toBe("大谷");
 
-    console.log(3);
     await rs.seek(6, SeekOrigin.Begin);
     buffer = (await rs.read()) as ArrayBuffer;
     text = toString(buffer);
     expect(text).toBe("翔平");
 
-    console.log(4);
     ws = await file.createWriteStream({ append: false, create: false });
-    console.log(41);
     await ws.seek(0, SeekOrigin.End);
-    console.log(42);
     await ws.write(toArrayBuffer("ホームラン"));
-    console.log(43);
 
-    console.log(5);
     await rs.seek(0, SeekOrigin.Begin);
     buffer = (await rs.read()) as ArrayBuffer;
     text = toString(buffer);
     expect(text).toBe("大谷翔平ホームラン");
 
-    console.log(6);
     await rs.seek(0, SeekOrigin.Begin);
     await rs.read(6);
     await rs.seek(6, SeekOrigin.Current);
@@ -107,7 +98,6 @@ describe("basic", () => {
     await rs.close();
   });
 
-  /*
   it("mkdir test", async () => {
     const dir = await fs.getDirectory("/");
     let dirs = await dir.readdir();
@@ -161,6 +151,7 @@ describe("basic", () => {
 
     const dir = await fs.getDirectory("/folder/");
     const list = await dir.list();
+    console.log(list);
     expect(0 <= list.indexOf("/folder/sample.txt")).toBe(true);
   });
 
@@ -196,5 +187,4 @@ describe("basic", () => {
     const folder3List = await folder3.ls();
     expect(0 <= folder3List.indexOf("/folder3/sample2.txt")).toBe(true);
   });
-  */
 });
