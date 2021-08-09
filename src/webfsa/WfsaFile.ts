@@ -28,7 +28,9 @@ export class WfsaFile extends AbstractFile {
   ): Promise<AbstractWriteStream> {
     const { parent, name } = await this.wfs._getParent(this.path);
     const fileHandle = await parent.getFileHandle(name, { create: true });
-    const writable = await fileHandle.createWritable();
+    const writable = await fileHandle.createWritable({
+      keepExistingData: true,
+    });
     return new WfsaWriteStream(this, writable, options);
   }
 

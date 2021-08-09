@@ -19,7 +19,6 @@ export class WfsaWriteStream extends AbstractWriteStream {
   }
 
   public async _write(buffer: ArrayBuffer | Uint8Array): Promise<void> {
-    console.log("_write", buffer.byteLength);
     await this.writable.write(buffer);
   }
 
