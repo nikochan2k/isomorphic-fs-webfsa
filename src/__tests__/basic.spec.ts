@@ -28,7 +28,7 @@ describe("basic", () => {
     } catch (e) {
       expect(e.code).toBe(NotFoundError.code);
     }
-    const buffer = toArrayBuffer("");
+    const buffer = await toArrayBuffer("");
     const ws = await file.createWriteStream();
     await ws.write(buffer);
     await ws.close();
@@ -44,7 +44,7 @@ describe("basic", () => {
     } catch (e) {
       expect(e.code).toBe(NotFoundError.code);
     }
-    const buffer = toArrayBuffer("test");
+    const buffer = await toArrayBuffer("test");
     const ws = await file.createWriteStream();
     await ws.write(buffer);
     await ws.close();
@@ -57,7 +57,7 @@ describe("basic", () => {
     const rs = await file.createReadStream();
     const buffer = (await rs.read()) as ArrayBuffer;
     expect(buffer.byteLength).toBe(4);
-    const text = toString(buffer);
+    const text = await toString(buffer);
     expect(text).toBe("test");
   });
 
@@ -65,33 +65,33 @@ describe("basic", () => {
     const file = await fs.getFile("/otani.txt");
 
     let ws = await file.createWriteStream();
-    await ws.write(toArrayBuffer("大谷"));
-    await ws.write(toArrayBuffer("翔平"));
+    await ws.write(await toArrayBuffer("大谷"));
+    await ws.write(await toArrayBuffer("翔平"));
 
     const rs = await file.createReadStream();
     let buffer = (await rs.read(6)) as ArrayBuffer;
-    let text = toString(buffer);
+    let text = await toString(buffer);
     expect(text).toBe("大谷");
 
     await rs.seek(6, SeekOrigin.Begin);
     buffer = (await rs.read()) as ArrayBuffer;
-    text = toString(buffer);
+    text = await toString(buffer);
     expect(text).toBe("翔平");
 
     ws = await file.createWriteStream({ append: false, create: false });
     await ws.seek(0, SeekOrigin.End);
-    await ws.write(toArrayBuffer("ホームラン"));
+    await ws.write(await toArrayBuffer("ホームラン"));
 
     await rs.seek(0, SeekOrigin.Begin);
     buffer = (await rs.read()) as ArrayBuffer;
-    text = toString(buffer);
+    text = await toString(buffer);
     expect(text).toBe("大谷翔平ホームラン");
 
     await rs.seek(0, SeekOrigin.Begin);
     await rs.read(6);
     await rs.seek(6, SeekOrigin.Current);
     buffer = (await rs.read()) as ArrayBuffer;
-    text = toString(buffer);
+    text = await toString(buffer);
     expect(text).toBe("ホームラン");
 
     await ws.close();
@@ -133,7 +133,7 @@ describe("basic", () => {
       expect(e.code).toBe(NotFoundError.code);
     }
     const ws = await file.createWriteStream();
-    const outBuf = toArrayBuffer("Sample");
+    const outBuf = await toArrayBuffer("Sample");
     const before = Date.now();
     await ws.write(outBuf);
     await ws.close();
@@ -145,7 +145,7 @@ describe("basic", () => {
 
     const rs = await file.createReadStream();
     const inBuf = (await rs.read()) as ArrayBuffer;
-    const text = toString(inBuf);
+    const text = await toString(inBuf);
     expect(text).toBe("Sample");
     rs.close();
 
