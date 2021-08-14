@@ -1,6 +1,7 @@
-import { AbstractReadStream, OpenOptions } from "isomorphic-fs";
-import { toArrayBuffer } from "./buffer";
+import { AbstractReadStream, OpenOptions, binary } from "isomorphic-fs";
 import { WfsaFile } from "./WfsaFile";
+
+const { toArrayBuffer } = binary;
 
 export class WfsaReadStream extends AbstractReadStream {
   private file?: File;

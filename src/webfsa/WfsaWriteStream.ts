@@ -1,6 +1,5 @@
 import { AbstractWriteStream, OpenWriteOptions } from "isomorphic-fs";
 import { WfsaFile } from "./WfsaFile";
-
 export class WfsaWriteStream extends AbstractWriteStream {
   writable?: FileSystemWritableFileStream;
 

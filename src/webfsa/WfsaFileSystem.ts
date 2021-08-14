@@ -11,10 +11,12 @@ import {
   Stats,
   SyntaxError,
   URLType,
+  path,
 } from "isomorphic-fs";
-import { DIR_SEPARATOR } from "isomorphic-fs/lib/util";
 import { WfsaDirectory } from "./WfsaDirectory";
 import { WfsaFile } from "./WfsaFile";
+
+const { DIR_SEPARATOR } = path;
 
 export class WfsaFileSystem extends AbstractFileSystem {
   private root?: FileSystemDirectoryHandle;

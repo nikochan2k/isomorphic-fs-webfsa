@@ -2,9 +2,11 @@ import {
   AbstractDirectory,
   createError,
   NoModificationAllowedError,
+  path,
 } from "isomorphic-fs";
-import { DIR_SEPARATOR, joinPaths } from "isomorphic-fs/lib/util";
 import { WfsaFileSystem } from "./WfsaFileSystem";
+
+const { DIR_SEPARATOR, joinPaths } = path;
 
 export class WfsaDirectory extends AbstractDirectory {
   constructor(private wfs: WfsaFileSystem, path: string) {
