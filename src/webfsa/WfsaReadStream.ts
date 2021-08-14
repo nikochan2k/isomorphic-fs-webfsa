@@ -1,7 +1,5 @@
-import { AbstractReadStream, OpenOptions, binary } from "isomorphic-fs";
+import { AbstractReadStream, OpenOptions } from "isomorphic-fs";
 import { WfsaFile } from "./WfsaFile";
-
-const { toArrayBuffer } = binary;
 
 export class WfsaReadStream extends AbstractReadStream {
   private file?: File;
@@ -12,7 +10,7 @@ export class WfsaReadStream extends AbstractReadStream {
 
   public async _close(): Promise<void> {}
 
-  public async _read(size?: number): Promise<ArrayBuffer | null> {
+  public async _read(size?: number): Promise<Uint8Array | null> {
     const file = await this._getFile();
     if (file.size <= this.position) {
       return null;
@@ -22,7 +20,7 @@ export class WfsaReadStream extends AbstractReadStream {
       end = file.size;
     }
     const blob = file.slice(this.position, end);
-    return toArrayBuffer(blob);
+    return this.converter.toUint8Array(blob);
   }
 
   protected async _seek(_start: number): Promise<void> {
