@@ -1,30 +1,38 @@
-import { AbstractReadStream, OpenOptions } from "isomorphic-fs";
+import {
+  AbstractReadStream,
+  OpenReadOptions,
+  Source,
+  SourceType,
+} from "isomorphic-fs";
 import { WfsaFile } from "./WfsaFile";
 
 export class WfsaReadStream extends AbstractReadStream {
   private blob?: File;
 
-  constructor(file: WfsaFile, options: OpenOptions) {
+  constructor(file: WfsaFile, options: OpenReadOptions) {
     super(file, options);
   }
 
   public async _close(): Promise<void> {}
 
-  public async _read(size?: number): Promise<Uint8Array | null> {
-    const file = await this._getFile();
-    if (file.size <= this.position) {
+  public async _read(size?: number): Promise<Source | null> {
+    const blob = await this._getFile();
+    if (blob.size <= this.position) {
       return null;
     }
     let end = this.position + (size == null ? this.bufferSize : size);
-    if (file.size < end) {
-      end = file.size;
+    if (blob.size < end) {
+      end = blob.size;
     }
-    const blob = file.slice(this.position, end);
-    return this.converter.toUint8Array(blob);
+    return blob.slice(this.position, end);
   }
 
   protected async _seek(_start: number): Promise<void> {
     await this._getFile();
+  }
+
+  protected getDefaultSourceType(): SourceType {
+    return "Blob";
   }
 
   private async _getFile() {

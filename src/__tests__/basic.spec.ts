@@ -1,4 +1,4 @@
-import { NotFoundError, SeekOrigin, conv } from "isomorphic-fs";
+import { conv, NotFoundError, SeekOrigin } from "isomorphic-fs";
 import { WfsaFileSystem } from "../webfsa/WfsaFileSystem";
 
 const c = new conv.Converter();
@@ -25,7 +25,7 @@ describe("basic", () => {
       await file.stat();
       fail("Found file: " + file.path);
     } catch (e) {
-      expect(e.code).toBe(NotFoundError.code);
+      expect(e.name).toBe(NotFoundError.name);
     }
     const buffer = await c.toArrayBuffer({ value: "", encoding: "Text" });
     const ws = await file.createWriteStream();
@@ -41,7 +41,7 @@ describe("basic", () => {
       await file.stat();
       fail("Found file: " + file.path);
     } catch (e) {
-      expect(e.code).toBe(NotFoundError.code);
+      expect(e.name).toBe(NotFoundError.name);
     }
     const buffer = await c.toArrayBuffer({ value: "test", encoding: "Text" });
     const ws = await file.createWriteStream();
@@ -54,44 +54,41 @@ describe("basic", () => {
   it("read text file", async () => {
     const file = await fs.getFile("/test.txt");
     const rs = await file.createReadStream();
-    const buffer = (await rs.read()) as ArrayBuffer;
-    expect(buffer.byteLength).toBe(4);
-    const text = await c.toText(buffer);
+    const blob = (await rs.read()) as Blob;
+    expect(blob.size).toBe(4);
+    const text = await c.toText(blob);
     expect(text).toBe("test");
   });
 
   it("continuous read and write", async () => {
     const file = await fs.getFile("/otani.txt");
 
-    let ws = await file.createWriteStream();
+    const ws = await file.createWriteStream();
     await ws.write(await c.toArrayBuffer({ value: "大谷", encoding: "Text" }));
     await ws.write(await c.toArrayBuffer({ value: "翔平", encoding: "Text" }));
 
     const rs = await file.createReadStream();
-    let buffer = (await rs.read(6)) as ArrayBuffer;
+    let buffer = (await rs.read(6)) as Blob;
     let text = await c.toText(buffer);
     expect(text).toBe("大谷");
 
     await rs.seek(6, SeekOrigin.Begin);
-    buffer = (await rs.read()) as ArrayBuffer;
+    buffer = (await rs.read()) as Blob;
     text = await c.toText(buffer);
     expect(text).toBe("翔平");
 
-    ws = await file.createWriteStream({ append: false, create: false });
     await ws.seek(0, SeekOrigin.End);
-    await ws.write(
-      await c.toArrayBuffer({ value: "ホームラン", encoding: "Text" })
-    );
+    await ws.write(await c.toBlob({ value: "ホームラン", encoding: "Text" }));
 
     await rs.seek(0, SeekOrigin.Begin);
-    buffer = (await rs.read()) as ArrayBuffer;
+    buffer = (await rs.read()) as Blob;
     text = await c.toText(buffer);
     expect(text).toBe("大谷翔平ホームラン");
 
     await rs.seek(0, SeekOrigin.Begin);
     await rs.read(6);
     await rs.seek(6, SeekOrigin.Current);
-    buffer = (await rs.read()) as ArrayBuffer;
+    buffer = (await rs.read()) as Blob;
     text = await c.toText(buffer);
     expect(text).toBe("ホームラン");
 
@@ -112,7 +109,7 @@ describe("basic", () => {
       await folder.stat();
       fail("Found folder: " + folder.path);
     } catch (e) {
-      expect(e.code).toBe(NotFoundError.code);
+      expect(e.name).toBe(NotFoundError.name);
     }
     await folder.mkdir();
     await folder.stat();
@@ -131,7 +128,7 @@ describe("basic", () => {
       await file.stat();
       fail("Found file: " + file.path);
     } catch (e) {
-      expect(e.code).toBe(NotFoundError.code);
+      expect(e.name).toBe(NotFoundError.name);
     }
     const ws = await file.createWriteStream();
     const outBuf = await c.toArrayBuffer({ value: "Sample", encoding: "Text" });
@@ -145,14 +142,13 @@ describe("basic", () => {
     expect(before <= modified && modified <= after).toBe(true);
 
     const rs = await file.createReadStream();
-    const inBuf = (await rs.read()) as ArrayBuffer;
+    const inBuf = (await rs.read()) as Blob;
     const text = await c.toText(inBuf);
     expect(text).toBe("Sample");
     rs.close();
 
     const dir = await fs.getDirectory("/folder/");
     const list = await dir.list();
-    console.log(list);
     expect(0 <= list.indexOf("/folder/sample.txt")).toBe(true);
   });
 
