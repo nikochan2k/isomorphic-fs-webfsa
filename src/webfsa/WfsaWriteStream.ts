@@ -3,8 +3,8 @@ import { WfsaFile } from "./WfsaFile";
 export class WfsaWriteStream extends AbstractWriteStream {
   writable?: FileSystemWritableFileStream;
 
-  constructor(private wf: WfsaFile, options: OpenWriteOptions) {
-    super(wf, options);
+  constructor(file: WfsaFile, options: OpenWriteOptions) {
+    super(file, options);
   }
 
   public async _close(): Promise<void> {
@@ -34,7 +34,7 @@ export class WfsaWriteStream extends AbstractWriteStream {
     if (this.writable) {
       return this.writable;
     }
-    const wf = this.wf;
+    const wf = this.file as WfsaFile;
     const { parent, name } = await wf.wfs._getParent(wf.path);
     const fileHandle = await parent.getFileHandle(name, { create: true });
     this.writable = await fileHandle.createWritable({

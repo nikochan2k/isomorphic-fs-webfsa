@@ -2,10 +2,10 @@ import { AbstractReadStream, OpenOptions } from "isomorphic-fs";
 import { WfsaFile } from "./WfsaFile";
 
 export class WfsaReadStream extends AbstractReadStream {
-  private file?: File;
+  private blob?: File;
 
-  constructor(private wf: WfsaFile, options: OpenOptions) {
-    super(wf, options);
+  constructor(file: WfsaFile, options: OpenOptions) {
+    super(file, options);
   }
 
   public async _close(): Promise<void> {}
@@ -28,18 +28,18 @@ export class WfsaReadStream extends AbstractReadStream {
   }
 
   private async _getFile() {
-    const closed = await this.wf._closeWriteStream();
-    if (this.file && !closed) {
-      return this.file;
+    const wf = this.file as WfsaFile;
+    const closed = await wf._closeWriteStream();
+    if (this.blob && !closed) {
+      return this.blob;
     }
 
-    const wf = this.wf;
     const { parent, name } = await wf.wfs._getParent(wf.path);
     const fileHandle = await parent.getFileHandle(name);
-    this.file = await fileHandle.getFile();
-    if (this.file.size <= this.position) {
-      this.position = this.file.size;
+    this.blob = await fileHandle.getFile();
+    if (this.blob.size <= this.position) {
+      this.position = this.blob.size;
     }
-    return this.file;
+    return this.blob;
   }
 }
