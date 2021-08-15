@@ -1,4 +1,5 @@
-import { AbstractWriteStream, OpenWriteOptions } from "isomorphic-fs";
+import { AbstractWriteStream, OpenWriteOptions, Source } from "isomorphic-fs";
+import { isBlob, isStringSource } from "isomorphic-fs/lib/util/conv";
 import { WfsaFile } from "./WfsaFile";
 export class WfsaWriteStream extends AbstractWriteStream {
   writable?: FileSystemWritableFileStream;
@@ -20,9 +21,13 @@ export class WfsaWriteStream extends AbstractWriteStream {
     await writable.truncate(size);
   }
 
-  public async _write(buffer: ArrayBuffer | Uint8Array): Promise<void> {
+  public async _write(src: Source): Promise<number> {
     const writable = await this._getWritable();
-    await writable.write(buffer);
+    if (isStringSource(src)) {
+      src = await this.converter.toArrayBuffer(src);
+    }
+    await writable.write(src);
+    return isBlob(src) ? src.size : src.byteLength;
   }
 
   protected async _seek(start: number): Promise<void> {
