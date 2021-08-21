@@ -4,7 +4,7 @@ import {
   AbstractWriteStream,
   OpenOptions,
   OpenWriteOptions,
-} from "isomorphic-fs";
+} from "univ-fs";
 import { WfsaFileSystem } from "./WfsaFileSystem";
 import { WfsaReadStream } from "./WfsaReadStream";
 import { WfsaWriteStream } from "./WfsaWriteStream";

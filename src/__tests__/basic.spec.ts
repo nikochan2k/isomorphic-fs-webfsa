@@ -1,7 +1,8 @@
-import { conv, NotFoundError, SeekOrigin } from "isomorphic-fs";
-import { WfsaFileSystem } from "../webfsa/WfsaFileSystem";
+import { Converter } from "univ-conv";
+import { NotFoundError, SeekOrigin } from "univ-fs";
+import { WfsaFileSystem } from "../WfsaFileSystem";
 
-const c = new conv.Converter();
+const c = new Converter();
 const fs = new WfsaFileSystem();
 
 describe("basic", () => {

@@ -1,12 +1,10 @@
 import {
   AbstractDirectory,
   createError,
+  joinPaths,
   NoModificationAllowedError,
-  path,
-} from "isomorphic-fs";
+} from "univ-fs";
 import { WfsaFileSystem } from "./WfsaFileSystem";
-
-const { DIR_SEPARATOR, joinPaths } = path;
 
 export class WfsaDirectory extends AbstractDirectory {
   constructor(private wfs: WfsaFileSystem, path: string) {
@@ -27,14 +25,14 @@ export class WfsaDirectory extends AbstractDirectory {
   }
 
   public async _mkcol(): Promise<void> {
-    if (this.path === DIR_SEPARATOR) {
+    if (this.path === "/") {
       return;
     }
     await this._getDirectoryHandle(true);
   }
 
   public async _rmdir(): Promise<void> {
-    if (this.path === DIR_SEPARATOR) {
+    if (this.path === "/") {
       throw createError({
         name: NoModificationAllowedError.name,
         repository: this.fs.repository,
@@ -47,7 +45,7 @@ export class WfsaDirectory extends AbstractDirectory {
   }
 
   public async _rmdirRecursively(): Promise<void> {
-    if (this.path === DIR_SEPARATOR) {
+    if (this.path === "/") {
       throw createError({
         name: NoModificationAllowedError.name,
         repository: this.fs.repository,
@@ -60,7 +58,7 @@ export class WfsaDirectory extends AbstractDirectory {
   }
 
   private async _getDirectoryHandle(create: boolean) {
-    if (this.path === DIR_SEPARATOR) {
+    if (this.path === "/") {
       return this.wfs._getRoot();
     }
     const { parent, name } = await this.wfs._getParent(this.path);

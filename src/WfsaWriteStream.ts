@@ -1,5 +1,5 @@
-import { AbstractWriteStream, OpenWriteOptions, Source } from "isomorphic-fs";
-import { isBlob, isStringSource } from "isomorphic-fs/lib/util/conv";
+import { isBlob, isStringSource } from "univ-conv";
+import { AbstractWriteStream, OpenWriteOptions, Source } from "univ-fs";
 import { WfsaFile } from "./WfsaFile";
 export class WfsaWriteStream extends AbstractWriteStream {
   writable?: FileSystemWritableFileStream;

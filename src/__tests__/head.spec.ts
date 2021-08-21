@@ -1,5 +1,5 @@
-import { NotFoundError } from "isomorphic-fs";
-import { WfsaFileSystem } from "../webfsa/WfsaFileSystem";
+import { NotFoundError } from "univ-fs";
+import { WfsaFileSystem } from "../WfsaFileSystem";
 
 const fs = new WfsaFileSystem();
 

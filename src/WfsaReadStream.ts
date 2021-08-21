@@ -3,7 +3,7 @@ import {
   OpenReadOptions,
   Source,
   SourceType,
-} from "isomorphic-fs";
+} from "univ-fs";
 import { WfsaFile } from "./WfsaFile";
 
 export class WfsaReadStream extends AbstractReadStream {

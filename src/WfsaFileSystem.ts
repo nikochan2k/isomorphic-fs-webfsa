@@ -11,12 +11,9 @@ import {
   Stats,
   SyntaxError,
   URLType,
-  path,
-} from "isomorphic-fs";
+} from "univ-fs";
 import { WfsaDirectory } from "./WfsaDirectory";
 import { WfsaFile } from "./WfsaFile";
-
-const { DIR_SEPARATOR } = path;
 
 export class WfsaFileSystem extends AbstractFileSystem {
   private root?: FileSystemDirectoryHandle;
@@ -26,7 +23,7 @@ export class WfsaFileSystem extends AbstractFileSystem {
   }
 
   public async _getParent(path: string) {
-    const parts = path.split(DIR_SEPARATOR).filter((part) => !!part);
+    const parts = path.split("/").filter((part) => !!part);
     if (parts.length === 0) {
       throw createError({
         name: SyntaxError.name,
@@ -53,7 +50,7 @@ export class WfsaFileSystem extends AbstractFileSystem {
   }
 
   public async _head(path: string, _options: HeadOptions): Promise<Stats> {
-    if (path === DIR_SEPARATOR) {
+    if (path === "/") {
       return {};
     }
     const { parent, name } = await this._getParent(path);
