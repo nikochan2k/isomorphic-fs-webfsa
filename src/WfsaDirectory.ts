@@ -44,19 +44,6 @@ export class WfsaDirectory extends AbstractDirectory {
     await parent.removeEntry(name);
   }
 
-  public async _rmdirRecursively(): Promise<void> {
-    if (this.path === "/") {
-      throw createError({
-        name: NoModificationAllowedError.name,
-        repository: this.fs.repository,
-        path: this.path,
-        e: "Cannot delete root directory",
-      });
-    }
-    const { parent, name } = await this.wfs._getParent(this.path);
-    await parent.removeEntry(name, { recursive: true });
-  }
-
   private async _getDirectoryHandle(create: boolean) {
     if (this.path === "/") {
       return this.wfs._getRoot();
