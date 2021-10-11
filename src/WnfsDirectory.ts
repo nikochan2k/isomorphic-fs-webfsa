@@ -4,11 +4,11 @@ import {
   joinPaths,
   NoModificationAllowedError,
 } from "univ-fs";
-import { WfsaFileSystem } from "./WfsaFileSystem";
+import { WnfsFileSystem } from "./WnfsFileSystem";
 
-export class WfsaDirectory extends AbstractDirectory {
-  constructor(private wfs: WfsaFileSystem, path: string) {
-    super(wfs, path);
+export class WnfsDirectory extends AbstractDirectory {
+  constructor(private wfsaFS: WnfsFileSystem, path: string) {
+    super(wfsaFS, path);
   }
 
   public async _list(): Promise<string[]> {
@@ -40,15 +40,15 @@ export class WfsaDirectory extends AbstractDirectory {
         e: "Cannot delete root directory",
       });
     }
-    const { parent, name } = await this.wfs._getParent(this.path);
+    const { parent, name } = await this.wfsaFS._getParent(this.path);
     await parent.removeEntry(name);
   }
 
   private async _getDirectoryHandle(create: boolean) {
     if (this.path === "/") {
-      return this.wfs._getRoot();
+      return this.wfsaFS._getRoot();
     }
-    const { parent, name } = await this.wfs._getParent(this.path);
+    const { parent, name } = await this.wfsaFS._getParent(this.path);
     return parent.getDirectoryHandle(name, { create });
   }
 }

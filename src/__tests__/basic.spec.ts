@@ -1,9 +1,9 @@
 import { Converter } from "univ-conv";
 import { NotFoundError, SeekOrigin } from "univ-fs";
-import { WfsaFileSystem } from "../WfsaFileSystem";
+import { WnfsFileSystem } from "../WnfsFileSystem";
 
 const c = new Converter();
-const fs = new WfsaFileSystem();
+const fs = new WnfsFileSystem();
 
 describe("basic", () => {
   beforeAll(async () => {

@@ -5,15 +5,15 @@ import {
   OpenOptions,
   OpenWriteOptions,
 } from "univ-fs";
-import { WfsaFileSystem } from "./WfsaFileSystem";
-import { WfsaReadStream } from "./WfsaReadStream";
-import { WfsaWriteStream } from "./WfsaWriteStream";
+import { WnfsFileSystem } from "./WnfsFileSystem";
+import { WnfsReadStream } from "./WnfsReadStream";
+import { WnfsWriteStream } from "./WnfsWriteStream";
 
-export class WfsaFile extends AbstractFile {
-  private writeStream?: WfsaWriteStream;
+export class WnfsFile extends AbstractFile {
+  private writeStream?: WnfsWriteStream;
 
-  constructor(public wfs: WfsaFileSystem, path: string) {
-    super(wfs, path);
+  constructor(public wfsaFS: WnfsFileSystem, path: string) {
+    super(wfsaFS, path);
   }
 
   public async _closeWriteStream() {
@@ -27,19 +27,20 @@ export class WfsaFile extends AbstractFile {
   public async _createReadStream(
     options: OpenOptions
   ): Promise<AbstractReadStream> {
-    return new WfsaReadStream(this, options);
+    return new WnfsReadStream(this, options);
   }
 
   public async _createWriteStream(
+    _post: boolean,
     options: OpenWriteOptions
   ): Promise<AbstractWriteStream> {
     await this._closeWriteStream();
-    this.writeStream = new WfsaWriteStream(this, options);
+    this.writeStream = new WnfsWriteStream(this, options);
     return this.writeStream;
   }
 
   public async _rm(): Promise<void> {
-    const { parent, name } = await this.wfs._getParent(this.path);
+    const { parent, name } = await this.wfsaFS._getParent(this.path);
     await parent.removeEntry(name);
   }
 }

@@ -12,10 +12,10 @@ import {
   SyntaxError,
   URLType,
 } from "univ-fs";
-import { WfsaDirectory } from "./WfsaDirectory";
-import { WfsaFile } from "./WfsaFile";
+import { WnfsDirectory } from "./WnfsDirectory";
+import { WnfsFile } from "./WnfsFile";
 
-export class WfsaFileSystem extends AbstractFileSystem {
+export class WnfsFileSystem extends AbstractFileSystem {
   private root?: FileSystemDirectoryHandle;
 
   constructor(options?: FileSystemOptions) {
@@ -79,11 +79,11 @@ export class WfsaFileSystem extends AbstractFileSystem {
   }
 
   public async getDirectory(path: string): Promise<Directory> {
-    return new WfsaDirectory(this, path);
+    return new WnfsDirectory(this, path);
   }
 
   public async getFile(path: string): Promise<File> {
-    return new WfsaFile(this, path);
+    return new WnfsFile(this, path);
   }
 
   public async toURL(

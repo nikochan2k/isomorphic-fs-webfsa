@@ -1,7 +1,7 @@
 import { NotFoundError, TypeMismatchError } from "univ-fs";
-import { WfsaFileSystem } from "../WfsaFileSystem";
+import { WnfsFileSystem } from "../WnfsFileSystem";
 
-const fs = new WfsaFileSystem();
+const fs = new WnfsFileSystem();
 
 describe("list", () => {
   beforeAll(async () => {

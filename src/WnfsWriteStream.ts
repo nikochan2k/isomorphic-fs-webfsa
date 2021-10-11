@@ -1,11 +1,12 @@
 import { isBlob, isStringSource } from "univ-conv";
 import { AbstractWriteStream, OpenWriteOptions, Source } from "univ-fs";
-import { WfsaFile } from "./WfsaFile";
-export class WfsaWriteStream extends AbstractWriteStream {
+import { WnfsFile } from "./WnfsFile";
+
+export class WnfsWriteStream extends AbstractWriteStream {
   writable?: FileSystemWritableFileStream;
 
-  constructor(file: WfsaFile, options: OpenWriteOptions) {
-    super(file, options);
+  constructor(private wnfsFile: WnfsFile, options: OpenWriteOptions) {
+    super(wnfsFile, options);
   }
 
   public async _close(): Promise<void> {
@@ -39,8 +40,8 @@ export class WfsaWriteStream extends AbstractWriteStream {
     if (this.writable) {
       return this.writable;
     }
-    const wf = this.file as WfsaFile;
-    const { parent, name } = await wf.wfs._getParent(wf.path);
+    const wnfsFile = this.wnfsFile;
+    const { parent, name } = await wnfsFile.wfsaFS._getParent(wnfsFile.path);
     const fileHandle = await parent.getFileHandle(name, { create: true });
     this.writable = await fileHandle.createWritable({
       keepExistingData: true,

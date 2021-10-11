@@ -4,13 +4,13 @@ import {
   Source,
   SourceType,
 } from "univ-fs";
-import { WfsaFile } from "./WfsaFile";
+import { WnfsFile } from "./WnfsFile";
 
-export class WfsaReadStream extends AbstractReadStream {
+export class WnfsReadStream extends AbstractReadStream {
   private blob?: File;
 
-  constructor(file: WfsaFile, options: OpenReadOptions) {
-    super(file, options);
+  constructor(private wnfsFile: WnfsFile, options: OpenReadOptions) {
+    super(wnfsFile, options);
   }
 
   public async _close(): Promise<void> {}
@@ -36,13 +36,13 @@ export class WfsaReadStream extends AbstractReadStream {
   }
 
   private async _getFile() {
-    const wf = this.file as WfsaFile;
-    const closed = await wf._closeWriteStream();
+    const wnfsFile = this.wnfsFile;
+    const closed = await wnfsFile._closeWriteStream();
     if (this.blob && !closed) {
       return this.blob;
     }
 
-    const { parent, name } = await wf.wfs._getParent(wf.path);
+    const { parent, name } = await wnfsFile.wfsaFS._getParent(wnfsFile.path);
     const fileHandle = await parent.getFileHandle(name);
     this.blob = await fileHandle.getFile();
     if (this.blob.size <= this.position) {
