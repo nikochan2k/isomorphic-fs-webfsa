@@ -27,9 +27,7 @@ export class WnfsReadStream extends AbstractReadStream {
     return blob.slice(this.position, end);
   }
 
-  protected async _seek(_start: number): Promise<void> {
-    await this._getFile();
-  }
+  protected async _seek(_start: number): Promise<void> {}
 
   protected getDefaultSourceType(): SourceType {
     return "Blob";
