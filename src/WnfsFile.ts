@@ -31,11 +31,11 @@ export class WnfsFile extends AbstractFile {
   }
 
   public async _createWriteStream(
-    _post: boolean,
     options: OpenWriteOptions
   ): Promise<AbstractWriteStream> {
     await this._closeWriteStream();
     this.writeStream = new WnfsWriteStream(this, options);
+    await this.writeStream._getWritable(options.append);
     return this.writeStream;
   }
 

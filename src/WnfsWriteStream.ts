@@ -17,13 +17,28 @@ export class WnfsWriteStream extends AbstractWriteStream {
     delete this.writable;
   }
 
+  public async _getWritable(keepExistingData: boolean) {
+    if (this.writable) {
+      return this.writable;
+    }
+    const wnfsFile = this.wnfsFile;
+    const { parent, name } = await wnfsFile.wfsaFS._getParent(wnfsFile.path);
+    const fileHandle = await parent.getFileHandle(name, {
+      create: this.options.create,
+    });
+    this.writable = await fileHandle.createWritable({
+      keepExistingData,
+    });
+    return this.writable;
+  }
+
   public async _truncate(size: number): Promise<void> {
-    const writable = await this._getWritable();
+    const writable = await this._getWritable(true);
     await writable.truncate(size);
   }
 
   public async _write(src: Source): Promise<number> {
-    const writable = await this._getWritable();
+    const writable = await this._getWritable(true);
     if (isStringSource(src)) {
       src = await this.converter.toArrayBuffer(src);
     }
@@ -32,20 +47,7 @@ export class WnfsWriteStream extends AbstractWriteStream {
   }
 
   protected async _seek(start: number): Promise<void> {
-    const writable = await this._getWritable();
+    const writable = await this._getWritable(true);
     await writable.seek(start);
-  }
-
-  private async _getWritable() {
-    if (this.writable) {
-      return this.writable;
-    }
-    const wnfsFile = this.wnfsFile;
-    const { parent, name } = await wnfsFile.wfsaFS._getParent(wnfsFile.path);
-    const fileHandle = await parent.getFileHandle(name, { create: true });
-    this.writable = await fileHandle.createWritable({
-      keepExistingData: true,
-    });
-    return this.writable;
   }
 }
