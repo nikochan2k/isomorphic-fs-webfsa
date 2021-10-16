@@ -4,6 +4,7 @@ import {
   AbstractWriteStream,
   OpenOptions,
   OpenWriteOptions,
+  SeekOrigin,
 } from "univ-fs";
 import { WnfsFileSystem } from "./WnfsFileSystem";
 import { WnfsReadStream } from "./WnfsReadStream";
@@ -12,8 +13,8 @@ import { WnfsWriteStream } from "./WnfsWriteStream";
 export class WnfsFile extends AbstractFile {
   private writeStream?: WnfsWriteStream;
 
-  constructor(public wfsaFS: WnfsFileSystem, path: string) {
-    super(wfsaFS, path);
+  constructor(public wnfsFS: WnfsFileSystem, path: string) {
+    super(wnfsFS, path);
   }
 
   public async _closeWriteStream() {
@@ -36,11 +37,14 @@ export class WnfsFile extends AbstractFile {
     await this._closeWriteStream();
     this.writeStream = new WnfsWriteStream(this, options);
     await this.writeStream._getWritable(options.append);
+    if (!options.create && options.append) {
+      await this.writeStream.seek(0, SeekOrigin.End);
+    }
     return this.writeStream;
   }
 
   public async _rm(): Promise<void> {
-    const { parent, name } = await this.wfsaFS._getParent(this.path);
+    const { parent, name } = await this.wnfsFS._getParent(this.path);
     await parent.removeEntry(name);
   }
 }

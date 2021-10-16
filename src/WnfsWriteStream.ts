@@ -19,10 +19,14 @@ export class WnfsWriteStream extends AbstractWriteStream {
 
   public async _getWritable(keepExistingData: boolean) {
     if (this.writable) {
-      return this.writable;
+      if (keepExistingData) {
+        return this.writable;
+      }
+      this._close();
     }
+
     const wnfsFile = this.wnfsFile;
-    const { parent, name } = await wnfsFile.wfsaFS._getParent(wnfsFile.path);
+    const { parent, name } = await wnfsFile.wnfsFS._getParent(wnfsFile.path);
     const fileHandle = await parent.getFileHandle(name, {
       create: this.options.create,
     });

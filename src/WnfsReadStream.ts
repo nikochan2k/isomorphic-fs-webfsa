@@ -40,7 +40,7 @@ export class WnfsReadStream extends AbstractReadStream {
       return this.blob;
     }
 
-    const { parent, name } = await wnfsFile.wfsaFS._getParent(wnfsFile.path);
+    const { parent, name } = await wnfsFile.wnfsFS._getParent(wnfsFile.path);
     const fileHandle = await parent.getFileHandle(name);
     this.blob = await fileHandle.getFile();
     if (this.blob.size <= this.position) {
