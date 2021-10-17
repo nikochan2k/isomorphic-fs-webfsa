@@ -6,6 +6,7 @@ import {
   FileSystemOptions,
   HeadOptions,
   NotFoundError,
+  NotSupportedError,
   PatchOptions,
   Props,
   Stats,
@@ -71,11 +72,16 @@ export class WnfsFileSystem extends AbstractFileSystem {
   }
 
   public _patch(
-    _path: string,
+    path: string,
     _props: Props,
     _options: PatchOptions
   ): Promise<void> {
-    throw new Error("Method not implemented.");
+    throw createError({
+      name: NotSupportedError.name,
+      repository: this.repository,
+      path,
+      e: "patch is not supported",
+    });
   }
 
   public async getDirectory(path: string): Promise<Directory> {
@@ -86,10 +92,17 @@ export class WnfsFileSystem extends AbstractFileSystem {
     return new WnfsFile(this, path);
   }
 
-  public async toURL(
-    _path: string,
-    _urlType: URLType = "GET"
-  ): Promise<string> {
-    throw new Error("Method not implemented.");
+  public async toURL(path: string, urlType: URLType = "GET"): Promise<string> {
+    if (urlType !== "GET") {
+      throw createError({
+        name: NotSupportedError.name,
+        repository: this.repository,
+        path,
+        e: `"${urlType}" is not supported`,
+      });
+    }
+    const file = await this.getFile(path);
+    const blob = await file.readAll({ sourceType: "Blob" });
+    return URL.createObjectURL(blob);
   }
 }
