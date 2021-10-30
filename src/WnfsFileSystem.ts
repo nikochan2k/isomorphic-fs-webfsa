@@ -4,7 +4,6 @@ import {
   Directory,
   File,
   FileSystemOptions,
-  HeadOptions,
   NotFoundError,
   NotSupportedError,
   PatchOptions,
@@ -50,7 +49,7 @@ export class WnfsFileSystem extends AbstractFileSystem {
     return root;
   }
 
-  public async _head(path: string, _options: HeadOptions): Promise<Stats> {
+  public async _head(path: string): Promise<Stats> {
     if (path === "/") {
       return {};
     }
@@ -102,7 +101,7 @@ export class WnfsFileSystem extends AbstractFileSystem {
       });
     }
     const file = await this.getFile(path);
-    const blob = await file.readAll({ sourceType: "Blob" });
+    const blob = await file.read({ type: "Blob" });
     return URL.createObjectURL(blob);
   }
 }

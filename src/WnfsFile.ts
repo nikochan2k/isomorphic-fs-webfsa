@@ -1,50 +1,38 @@
-import {
-  AbstractFile,
-  AbstractReadStream,
-  AbstractWriteStream,
-  OpenOptions,
-  OpenWriteOptions,
-  SeekOrigin,
-} from "univ-fs";
+import { Data } from "univ-conv";
+import { AbstractFile, OpenOptions, WriteOptions } from "univ-fs";
 import { WnfsFileSystem } from "./WnfsFileSystem";
-import { WnfsReadStream } from "./WnfsReadStream";
-import { WnfsWriteStream } from "./WnfsWriteStream";
 
 export class WnfsFile extends AbstractFile {
-  private writeStream?: WnfsWriteStream;
-
-  constructor(public wnfsFS: WnfsFileSystem, path: string) {
-    super(wnfsFS, path);
-  }
-
-  public async _closeWriteStream() {
-    if (!this.writeStream) {
-      return false;
-    }
-    await this.writeStream.close();
-    return true;
-  }
-
-  public async _createReadStream(
-    options: OpenOptions
-  ): Promise<AbstractReadStream> {
-    return new WnfsReadStream(this, options);
-  }
-
-  public async _createWriteStream(
-    options: OpenWriteOptions
-  ): Promise<AbstractWriteStream> {
-    await this._closeWriteStream();
-    this.writeStream = new WnfsWriteStream(this, options);
-    await this.writeStream._getWritable(options.append);
-    if (!options.create && options.append) {
-      await this.writeStream.seek(0, SeekOrigin.End);
-    }
-    return this.writeStream;
+  constructor(public wfs: WnfsFileSystem, path: string) {
+    super(wfs, path);
   }
 
   public async _rm(): Promise<void> {
-    const { parent, name } = await this.wnfsFS._getParent(this.path);
+    const { parent, name } = await this.wfs._getParent(this.path);
     await parent.removeEntry(name);
+  }
+
+  protected async _getData(_options: OpenOptions): Promise<Data> {
+    const { parent, name } = await this.wfs._getParent(this.path);
+    const fileHandle = await parent.getFileHandle(name);
+    return fileHandle.getFile();
+  }
+
+  protected async _write(data: Data, options: WriteOptions): Promise<void> {
+    const { parent, name } = await this.wfs._getParent(this.path);
+    const fileHandle = await parent.getFileHandle(name, {
+      create: options.create,
+    });
+    const writable = await fileHandle.createWritable({
+      keepExistingData: options.append,
+    });
+    if (options.append) {
+      const stats = await this.head(options);
+      await writable.seek(stats.size as number);
+    }
+
+    const converter = this._getConverter(options.bufferSize);
+    const readable = await converter.toReadableStream(data);
+    await converter.pipe(readable, writable);
   }
 }

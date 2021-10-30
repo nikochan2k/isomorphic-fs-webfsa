@@ -1,3 +1,3 @@
-# isomorphic-fs-webfsa
+# univ-fs-webnfs
 
-The isomorphic FileSystem API for Web File System Access API.
+The universal FileSystem API for Web File System Access API (Native File System API).

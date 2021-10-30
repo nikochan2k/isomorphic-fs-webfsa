@@ -7,8 +7,8 @@ import {
 import { WnfsFileSystem } from "./WnfsFileSystem";
 
 export class WnfsDirectory extends AbstractDirectory {
-  constructor(private wfsaFS: WnfsFileSystem, path: string) {
-    super(wfsaFS, path);
+  constructor(private wfs: WnfsFileSystem, path: string) {
+    super(wfs, path);
   }
 
   public async _list(): Promise<string[]> {
@@ -40,15 +40,15 @@ export class WnfsDirectory extends AbstractDirectory {
         e: "Cannot delete root directory",
       });
     }
-    const { parent, name } = await this.wfsaFS._getParent(this.path);
+    const { parent, name } = await this.wfs._getParent(this.path);
     await parent.removeEntry(name);
   }
 
   private async _getDirectoryHandle(create: boolean) {
     if (this.path === "/") {
-      return this.wfsaFS._getRoot();
+      return this.wfs._getRoot();
     }
-    const { parent, name } = await this.wfsaFS._getParent(this.path);
+    const { parent, name } = await this.wfs._getParent(this.path);
     return parent.getDirectoryHandle(name, { create });
   }
 }
