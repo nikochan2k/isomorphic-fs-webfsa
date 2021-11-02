@@ -2,6 +2,7 @@ import {
   AbstractFileSystem,
   createError,
   Directory,
+  ErrorLike,
   File,
   FileSystemOptions,
   NotFoundError,
@@ -32,7 +33,7 @@ export class WnfsFileSystem extends AbstractFileSystem {
       });
     }
     let parent = await this._getRoot();
-    let end = parts.length - 1;
+    const end = parts.length - 1;
     for (let i = 0; i < end; i++) {
       const part = parts[i] as string;
       parent = await parent.getDirectoryHandle(part);
@@ -61,8 +62,8 @@ export class WnfsFileSystem extends AbstractFileSystem {
         modified: file.lastModified,
         size: file.size,
       };
-    } catch (e) {
-      if (e.code === NotFoundError.code) {
+    } catch (e: unknown) {
+      if ((e as ErrorLike).code === NotFoundError.code) {
         throw e;
       }
     }
@@ -72,23 +73,23 @@ export class WnfsFileSystem extends AbstractFileSystem {
 
   public _patch(
     path: string,
-    _props: Props,
-    _options: PatchOptions
+    _props: Props, // eslint-disable-line
+    _options: PatchOptions // eslint-disable-line
   ): Promise<void> {
     throw createError({
       name: NotSupportedError.name,
       repository: this.repository,
       path,
-      e: "patch is not supported",
+      e: { message: "patch is not supported" },
     });
   }
 
   public async getDirectory(path: string): Promise<Directory> {
-    return new WnfsDirectory(this, path);
+    return Promise.resolve(new WnfsDirectory(this, path));
   }
 
   public async getFile(path: string): Promise<File> {
-    return new WnfsFile(this, path);
+    return Promise.resolve(new WnfsFile(this, path));
   }
 
   public async toURL(path: string, urlType: URLType = "GET"): Promise<string> {
@@ -97,7 +98,7 @@ export class WnfsFileSystem extends AbstractFileSystem {
         name: NotSupportedError.name,
         repository: this.repository,
         path,
-        e: `"${urlType}" is not supported`,
+        e: { message: `"${urlType}" is not supported` },
       });
     }
     const file = await this.getFile(path);

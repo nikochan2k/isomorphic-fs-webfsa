@@ -37,7 +37,7 @@ export class WnfsDirectory extends AbstractDirectory {
         name: NoModificationAllowedError.name,
         repository: this.fs.repository,
         path: this.path,
-        e: "Cannot delete root directory",
+        e: { message: "Cannot delete root directory" },
       });
     }
     const { parent, name } = await this.wfs._getParent(this.path);

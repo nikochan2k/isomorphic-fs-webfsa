@@ -12,13 +12,15 @@ export class WnfsFile extends AbstractFile {
     await parent.removeEntry(name);
   }
 
-  protected async _getData(_options: OpenOptions): Promise<Data> {
+  protected async _load(
+    _options: OpenOptions // eslint-disable-line
+  ): Promise<Data> {
     const { parent, name } = await this.wfs._getParent(this.path);
     const fileHandle = await parent.getFileHandle(name);
     return fileHandle.getFile();
   }
 
-  protected async _write(data: Data, options: WriteOptions): Promise<void> {
+  protected async _save(data: Data, options: WriteOptions): Promise<void> {
     const { parent, name } = await this.wfs._getParent(this.path);
     const fileHandle = await parent.getFileHandle(name, {
       create: options.create,
