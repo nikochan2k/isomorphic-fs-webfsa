@@ -1,5 +1,5 @@
 import { Data } from "univ-conv";
-import { AbstractFile, OpenOptions, WriteOptions } from "univ-fs";
+import { AbstractFile, OpenOptions, Stats, WriteOptions } from "univ-fs";
 import { WnfsFileSystem } from "./WnfsFileSystem";
 
 export class WnfsFile extends AbstractFile {
@@ -12,15 +12,18 @@ export class WnfsFile extends AbstractFile {
     await parent.removeEntry(name);
   }
 
-  protected async _load(
-    _options: OpenOptions // eslint-disable-line
-  ): Promise<Data> {
+  // eslint-disable-next-line
+  protected async _load(_stats: Stats, _options: OpenOptions): Promise<Data> {
     const { parent, name } = await this.wfs._getParent(this.path);
     const fileHandle = await parent.getFileHandle(name);
     return fileHandle.getFile();
   }
 
-  protected async _save(data: Data, options: WriteOptions): Promise<void> {
+  protected async _save(
+    data: Data,
+    _stats: Stats, // eslint-disable-line
+    options: WriteOptions
+  ): Promise<void> {
     const { parent, name } = await this.wfs._getParent(this.path);
     const fileHandle = await parent.getFileHandle(name, {
       create: options.create,

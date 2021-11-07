@@ -11,7 +11,7 @@ import {
   Props,
   Stats,
   SyntaxError,
-  URLType,
+  URLOptions,
 } from "univ-fs";
 import { WnfsDirectory } from "./WnfsDirectory";
 import { WnfsFile } from "./WnfsFile";
@@ -21,6 +21,14 @@ export class WnfsFileSystem extends AbstractFileSystem {
 
   constructor(options?: FileSystemOptions) {
     super("", options);
+  }
+
+  public async _getDirectory(path: string): Promise<Directory> {
+    return Promise.resolve(new WnfsDirectory(this, path));
+  }
+
+  public async _getFile(path: string): Promise<File> {
+    return Promise.resolve(new WnfsFile(this, path));
   }
 
   public async _getParent(path: string) {
@@ -84,21 +92,14 @@ export class WnfsFileSystem extends AbstractFileSystem {
     });
   }
 
-  public async getDirectory(path: string): Promise<Directory> {
-    return Promise.resolve(new WnfsDirectory(this, path));
-  }
-
-  public async getFile(path: string): Promise<File> {
-    return Promise.resolve(new WnfsFile(this, path));
-  }
-
-  public async toURL(path: string, urlType: URLType = "GET"): Promise<string> {
-    if (urlType !== "GET") {
+  public async _toURL(path: string, options?: URLOptions): Promise<string> {
+    options = { urlType: "GET", ...options };
+    if (options.urlType !== "GET") {
       throw createError({
         name: NotSupportedError.name,
         repository: this.repository,
         path,
-        e: { message: `"${urlType}" is not supported` },
+        e: { message: `"${options.urlType}" is not supported` }, // eslint-disable-line
       });
     }
     const file = await this.getFile(path);
