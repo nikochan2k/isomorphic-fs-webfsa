@@ -11,6 +11,7 @@ import {
   Props,
   Stats,
   SyntaxError,
+  TypeMismatchError,
   URLOptions,
 } from "univ-fs";
 import { WnfsDirectory } from "./WnfsDirectory";
@@ -92,16 +93,30 @@ export class WnfsFileSystem extends AbstractFileSystem {
     });
   }
 
-  public async _toURL(path: string, options?: URLOptions): Promise<string> {
+  public async _toURL(
+    path: string,
+    isDirectory: boolean,
+    options?: URLOptions
+  ): Promise<string> {
     options = { urlType: "GET", ...options };
+    const repository = this.repository;
     if (options.urlType !== "GET") {
       throw createError({
         name: NotSupportedError.name,
-        repository: this.repository,
+        repository,
         path,
         e: { message: `"${options.urlType}" is not supported` }, // eslint-disable-line
       });
     }
+    if (isDirectory) {
+      throw createError({
+        name: TypeMismatchError.name,
+        repository,
+        path,
+        e: { message: `"${path}" is not a directory` },
+      });
+    }
+
     const file = await this.getFile(path);
     const blob = await file.read({ type: "Blob" });
     return URL.createObjectURL(blob);
