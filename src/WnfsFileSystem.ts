@@ -121,4 +121,8 @@ export class WnfsFileSystem extends AbstractFileSystem {
     const blob = await file.read("blob");
     return URL.createObjectURL(blob);
   }
+
+  public supportDirectory(): boolean {
+    return true;
+  }
 }
