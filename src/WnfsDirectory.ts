@@ -1,6 +1,8 @@
 import {
   AbstractDirectory,
   createError,
+  EntryType,
+  Item,
   joinPaths,
   NoModificationAllowedError,
 } from "univ-fs";
@@ -11,17 +13,20 @@ export class WnfsDirectory extends AbstractDirectory {
     super(wfs, path);
   }
 
-  public async _list(): Promise<string[]> {
+  public async _list(): Promise<Item[]> {
     const directoryHandle = await this._getDirectoryHandle(false);
-    const paths: string[] = [];
+    const items: Item[] = [];
     const entries = directoryHandle.entries();
     let result = await entries.next();
     while (!result.done) {
-      const [name] = result.value;
-      paths.push(joinPaths(this.path, name));
+      const [name, handle] = result.value;
+      items.push({
+        path: joinPaths(this.path, name),
+        type: handle.kind === "file" ? EntryType.File : EntryType.Directory,
+      });
       result = await entries.next();
     }
-    return paths;
+    return items;
   }
 
   public async _mkcol(): Promise<void> {
