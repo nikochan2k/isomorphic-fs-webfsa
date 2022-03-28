@@ -1,10 +1,15 @@
+import { NotFoundError } from "univ-fs";
 import { WnfsFileSystem } from "../WnfsFileSystem";
 
 export const fs = new WnfsFileSystem();
 export const setup = async () => {
-  const dir = await fs.getDirectory("/");
-  const paths = await dir.readdir({ ignoreHook: true });
-  for (const path of paths) {
-    await fs.rm(path, { recursive: true, force: true, ignoreHook: true });
+  try {
+    const root = await fs._getDirectory("/");
+    await root.rm({ force: true, recursive: true, ignoreHook: true });
+    await root.mkdir({ force: true, recursive: false, ignoreHook: true });
+  } catch (e) {
+    if (e.name !== NotFoundError.name) {
+      throw e;
+    }
   }
 };

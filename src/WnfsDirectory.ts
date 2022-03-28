@@ -1,11 +1,4 @@
-import {
-  AbstractDirectory,
-  createError,
-  EntryType,
-  Item,
-  joinPaths,
-  NoModificationAllowedError,
-} from "univ-fs";
+import { AbstractDirectory, EntryType, Item, joinPaths } from "univ-fs";
 import { WnfsFileSystem } from "./WnfsFileSystem";
 
 export class WnfsDirectory extends AbstractDirectory {
@@ -38,12 +31,7 @@ export class WnfsDirectory extends AbstractDirectory {
 
   public async _rmdir(): Promise<void> {
     if (this.path === "/") {
-      throw createError({
-        name: NoModificationAllowedError.name,
-        repository: this.fs.repository,
-        path: this.path,
-        e: { message: "Cannot delete root directory" },
-      });
+      return;
     }
     const { parent, name } = await this.wfs._getParent(this.path);
     await parent.removeEntry(name);
