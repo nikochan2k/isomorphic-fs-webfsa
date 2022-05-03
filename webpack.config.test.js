@@ -1,10 +1,12 @@
 module.exports = {
-  mode: "production",
+  mode: "development",
   entry: {
-    index: "./lib/index.js",
+    "basic.spec": "./lib/__tests__/basic.spec.js",
+    "head.spec": "./lib/__tests__/head.spec.js",
+    "list.spec": "./lib/__tests__/list.spec.js",
   },
   output: {
-    filename: "univ-conv.js",
+    filename: "[name].js",
     path: __dirname + "/dist",
   },
   resolve: {
