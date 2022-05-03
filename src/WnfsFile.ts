@@ -1,4 +1,4 @@
-import { Data } from "univ-conv";
+import { ConvertOptions, Data } from "univ-conv";
 import { AbstractFile, ReadOptions, Stats, WriteOptions } from "univ-fs";
 import { WnfsFileSystem } from "./WnfsFileSystem";
 
@@ -10,6 +10,18 @@ export class WnfsFile extends AbstractFile {
   public async _rm(): Promise<void> {
     const { parent, name } = await this.wfs._getParent(this.path);
     await parent.removeEntry(name);
+  }
+
+  public supportAppend(): boolean {
+    return true;
+  }
+
+  public supportRangeRead(): boolean {
+    return false;
+  }
+
+  public supportRangeWrite(): boolean {
+    return true;
   }
 
   // eslint-disable-next-line
@@ -37,7 +49,9 @@ export class WnfsFile extends AbstractFile {
     }
 
     const converter = this._getConverter();
-    const readable = await converter.toReadableStream(data);
+    const co: Partial<ConvertOptions> = { ...options };
+    delete co.start;
+    const readable = await converter.toReadableStream(data, co);
     await converter.pipe(readable, writable);
   }
 }
