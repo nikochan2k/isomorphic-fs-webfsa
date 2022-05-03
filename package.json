@@ -1,6 +1,6 @@
 {
   "name": "univ-fs-webnfs",
-  "version": "0.6.6",
+  "version": "0.7.0",
   "description": "The universal Filesystem for Web File System Access API (Native File System API)",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -19,12 +19,12 @@
     "api"
   ],
   "scripts": {
-    "clean": "rimraf ./lib",
+    "clean": "rimraf ./lib ./tsconfig.tsbuildinfo",
     "compile": "tsc",
     "build": "npm-run-all clean compile",
     "npm-version": "npm version patch",
     "npm-publish": "npm publish",
-    "release": "npm-run-all clean compile npm-version npm-publish",
+    "release": "npm-run-all build npm-version npm-publish",
     "webpack": "webpack",
     "web-compile": "npm-run-all compile webpack",
     "web-build": "npm-run-all clean web-clean web-compile",
