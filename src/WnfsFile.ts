@@ -7,31 +7,19 @@ export class WnfsFile extends AbstractFile {
     super(wfs, path);
   }
 
-  public async _rm(): Promise<void> {
-    const { parent, name } = await this.wfs._getParent(this.path);
-    await parent.removeEntry(name);
-  }
-
-  public supportAppend(): boolean {
-    return true;
-  }
-
-  public supportRangeRead(): boolean {
-    return false;
-  }
-
-  public supportRangeWrite(): boolean {
-    return true;
-  }
-
   // eslint-disable-next-line
-  protected async _load(_stats: Stats, _options: ReadOptions): Promise<Data> {
+  public async _doRead(_stats: Stats, _options: ReadOptions): Promise<Data> {
     const { parent, name } = await this.wfs._getParent(this.path);
     const fileHandle = await parent.getFileHandle(name);
     return fileHandle.getFile();
   }
 
-  protected async _save(
+  public async _doRm(): Promise<void> {
+    const { parent, name } = await this.wfs._getParent(this.path);
+    await parent.removeEntry(name);
+  }
+
+  public async _doWrite(
     data: Data,
     _stats: Stats, // eslint-disable-line
     options: WriteOptions
@@ -53,5 +41,17 @@ export class WnfsFile extends AbstractFile {
     delete co.start;
     const readable = await converter.toReadableStream(data, co);
     await converter.pipe(readable, writable);
+  }
+
+  public supportAppend(): boolean {
+    return true;
+  }
+
+  public supportRangeRead(): boolean {
+    return false;
+  }
+
+  public supportRangeWrite(): boolean {
+    return true;
   }
 }

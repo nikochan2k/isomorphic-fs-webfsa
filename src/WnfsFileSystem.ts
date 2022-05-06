@@ -23,12 +23,76 @@ export class WnfsFileSystem extends AbstractFileSystem {
     super("", options);
   }
 
-  public async _getDirectory(path: string): Promise<Directory> {
+  public async _doGetDirectory(path: string): Promise<Directory> {
     return Promise.resolve(new WnfsDirectory(this, path));
   }
 
-  public async _getFile(path: string): Promise<File> {
+  public async _doGetFile(path: string): Promise<File> {
     return Promise.resolve(new WnfsFile(this, path));
+  }
+
+  public async _doHead(path: string): Promise<Stats> {
+    if (path === "/") {
+      return {};
+    }
+    const { parent, name } = await this._getParent(path);
+    try {
+      const fileHandle = await parent.getFileHandle(name);
+      const file = await fileHandle.getFile();
+      return {
+        modified: file.lastModified,
+        size: file.size,
+      };
+    } catch (e: unknown) {
+      if ((e as ErrorLike).code === NotFoundError.code) {
+        throw e;
+      }
+    }
+    await parent.getDirectoryHandle(name);
+    return {};
+  }
+
+  public _doPatch(
+    path: string,
+    _stats: Stats, // eslint-disable-line
+    _props: Stats, // eslint-disable-line
+    _options: PatchOptions // eslint-disable-line
+  ): Promise<void> {
+    throw createError({
+      name: NotSupportedError.name,
+      repository: this.repository,
+      path,
+      e: { message: "patch is not supported" },
+    });
+  }
+
+  public async _doToURL(
+    path: string,
+    isDirectory: boolean,
+    options?: URLOptions
+  ): Promise<string> {
+    options = { urlType: "GET", ...options };
+    const repository = this.repository;
+    if (options.urlType !== "GET") {
+      throw createError({
+        name: NotSupportedError.name,
+        repository,
+        path,
+        e: { message: `"${options.urlType}" is not supported` }, // eslint-disable-line
+      });
+    }
+    if (isDirectory) {
+      throw createError({
+        name: TypeMismatchError.name,
+        repository,
+        path,
+        e: { message: `"${path}" is not a directory` },
+      });
+    }
+
+    const file = await this.getFile(path);
+    const blob = await file.read("blob");
+    return URL.createObjectURL(blob);
   }
 
   public async _getParent(path: string) {
@@ -56,70 +120,6 @@ export class WnfsFileSystem extends AbstractFileSystem {
     const root = await window.showDirectoryPicker();
     this.root = root;
     return root;
-  }
-
-  public async _head(path: string): Promise<Stats> {
-    if (path === "/") {
-      return {};
-    }
-    const { parent, name } = await this._getParent(path);
-    try {
-      const fileHandle = await parent.getFileHandle(name);
-      const file = await fileHandle.getFile();
-      return {
-        modified: file.lastModified,
-        size: file.size,
-      };
-    } catch (e: unknown) {
-      if ((e as ErrorLike).code === NotFoundError.code) {
-        throw e;
-      }
-    }
-    await parent.getDirectoryHandle(name);
-    return {};
-  }
-
-  public _patch(
-    path: string,
-    _stats: Stats, // eslint-disable-line
-    _props: Stats, // eslint-disable-line
-    _options: PatchOptions // eslint-disable-line
-  ): Promise<void> {
-    throw createError({
-      name: NotSupportedError.name,
-      repository: this.repository,
-      path,
-      e: { message: "patch is not supported" },
-    });
-  }
-
-  public async _toURL(
-    path: string,
-    isDirectory: boolean,
-    options?: URLOptions
-  ): Promise<string> {
-    options = { urlType: "GET", ...options };
-    const repository = this.repository;
-    if (options.urlType !== "GET") {
-      throw createError({
-        name: NotSupportedError.name,
-        repository,
-        path,
-        e: { message: `"${options.urlType}" is not supported` }, // eslint-disable-line
-      });
-    }
-    if (isDirectory) {
-      throw createError({
-        name: TypeMismatchError.name,
-        repository,
-        path,
-        e: { message: `"${path}" is not a directory` },
-      });
-    }
-
-    const file = await this.getFile(path);
-    const blob = await file.read("blob");
-    return URL.createObjectURL(blob);
   }
 
   public canPatchAccessed(): boolean {

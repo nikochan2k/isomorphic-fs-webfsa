@@ -6,7 +6,7 @@ export class WnfsDirectory extends AbstractDirectory {
     super(wfs, path);
   }
 
-  public async _list(): Promise<Item[]> {
+  public async _doList(): Promise<Item[]> {
     const directoryHandle = await this._getDirectoryHandle(false);
     const items: Item[] = [];
     const entries = directoryHandle.entries();
@@ -22,14 +22,14 @@ export class WnfsDirectory extends AbstractDirectory {
     return items;
   }
 
-  public async _mkcol(): Promise<void> {
+  public async _doMkcol(): Promise<void> {
     if (this.path === "/") {
       return;
     }
     await this._getDirectoryHandle(true);
   }
 
-  public async _rmdir(): Promise<void> {
+  public async _doRmdir(): Promise<void> {
     if (this.path === "/") {
       return;
     }
