@@ -23,12 +23,41 @@ export class WnfsFileSystem extends AbstractFileSystem {
     super("", options);
   }
 
-  public async _doGetDirectory(path: string): Promise<Directory> {
-    return Promise.resolve(new WnfsDirectory(this, path));
+  public _doGetDirectory(path: string): Directory {
+    return new WnfsDirectory(this, path);
   }
 
-  public async _doGetFile(path: string): Promise<File> {
-    return Promise.resolve(new WnfsFile(this, path));
+  public _doGetFile(path: string): File {
+    return new WnfsFile(this, path);
+  }
+
+  public async _doGetURL(
+    path: string,
+    isDirectory: boolean,
+    options?: URLOptions
+  ): Promise<string> {
+    options = { method: "GET", ...options };
+    const repository = this.repository;
+    if (options.method !== "GET") {
+      throw createError({
+        name: NotSupportedError.name,
+        repository,
+        path,
+        e: { message: `"${options.method}" is not supported` }, // eslint-disable-line
+      });
+    }
+    if (isDirectory) {
+      throw createError({
+        name: TypeMismatchError.name,
+        repository,
+        path,
+        e: { message: `"${path}" is not a directory` },
+      });
+    }
+
+    const file = await this.getFile(path);
+    const blob = await file.read("blob");
+    return URL.createObjectURL(blob);
   }
 
   public async _doHead(path: string): Promise<Stats> {
@@ -64,35 +93,6 @@ export class WnfsFileSystem extends AbstractFileSystem {
       path,
       e: { message: "patch is not supported" },
     });
-  }
-
-  public async _doToURL(
-    path: string,
-    isDirectory: boolean,
-    options?: URLOptions
-  ): Promise<string> {
-    options = { urlType: "GET", ...options };
-    const repository = this.repository;
-    if (options.urlType !== "GET") {
-      throw createError({
-        name: NotSupportedError.name,
-        repository,
-        path,
-        e: { message: `"${options.urlType}" is not supported` }, // eslint-disable-line
-      });
-    }
-    if (isDirectory) {
-      throw createError({
-        name: TypeMismatchError.name,
-        repository,
-        path,
-        e: { message: `"${path}" is not a directory` },
-      });
-    }
-
-    const file = await this.getFile(path);
-    const blob = await file.read("blob");
-    return URL.createObjectURL(blob);
   }
 
   public async _getParent(path: string) {

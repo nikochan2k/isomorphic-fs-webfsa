@@ -7,6 +7,11 @@ export class WnfsFile extends AbstractFile {
     super(wfs, path);
   }
 
+  public async _doDelete(): Promise<void> {
+    const { parent, name } = await this.wfs._getParent(this.path);
+    await parent.removeEntry(name);
+  }
+
   // eslint-disable-next-line
   public async _doRead(_stats: Stats, _options: ReadOptions): Promise<Data> {
     const { parent, name } = await this.wfs._getParent(this.path);
@@ -14,19 +19,14 @@ export class WnfsFile extends AbstractFile {
     return fileHandle.getFile();
   }
 
-  public async _doRm(): Promise<void> {
-    const { parent, name } = await this.wfs._getParent(this.path);
-    await parent.removeEntry(name);
-  }
-
   public async _doWrite(
     data: Data,
-    _stats: Stats, // eslint-disable-line
+    stats: Stats,
     options: WriteOptions
   ): Promise<void> {
     const { parent, name } = await this.wfs._getParent(this.path);
     const fileHandle = await parent.getFileHandle(name, {
-      create: options.create,
+      create: stats == null,
     });
     const writable = await fileHandle.createWritable({
       keepExistingData: options.append,

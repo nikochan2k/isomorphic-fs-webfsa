@@ -6,6 +6,14 @@ export class WnfsDirectory extends AbstractDirectory {
     super(wfs, path);
   }
 
+  public async _doDelete(): Promise<void> {
+    if (this.path === "/") {
+      return;
+    }
+    const { parent, name } = await this.wfs._getParent(this.path);
+    await parent.removeEntry(name);
+  }
+
   public async _doList(): Promise<Item[]> {
     const directoryHandle = await this._getDirectoryHandle(false);
     const items: Item[] = [];
@@ -27,14 +35,6 @@ export class WnfsDirectory extends AbstractDirectory {
       return;
     }
     await this._getDirectoryHandle(true);
-  }
-
-  public async _doRmdir(): Promise<void> {
-    if (this.path === "/") {
-      return;
-    }
-    const { parent, name } = await this.wfs._getParent(this.path);
-    await parent.removeEntry(name);
   }
 
   private async _getDirectoryHandle(create: boolean) {
