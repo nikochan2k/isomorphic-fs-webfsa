@@ -7,7 +7,6 @@ import {
   FileSystemOptions,
   NotFoundError,
   NotSupportedError,
-  PatchOptions,
   Stats,
   SyntaxError,
   TypeMismatchError,
@@ -81,12 +80,7 @@ export class WnfsFileSystem extends AbstractFileSystem {
     return {};
   }
 
-  public _doPatch(
-    path: string,
-    _stats: Stats, // eslint-disable-line
-    _props: Stats, // eslint-disable-line
-    _options: PatchOptions // eslint-disable-line
-  ): Promise<void> {
+  public _doPatch(path: string): Promise<void> {
     throw createError({
       name: NotSupportedError.name,
       repository: this.repository,
