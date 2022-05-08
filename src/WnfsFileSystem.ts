@@ -33,7 +33,7 @@ export class WnfsFileSystem extends AbstractFileSystem {
   public async _doGetURL(
     path: string,
     isDirectory: boolean,
-    options?: URLOptions
+    options: URLOptions
   ): Promise<string> {
     options = { method: "GET", ...options };
     const repository = this.repository;
@@ -55,8 +55,8 @@ export class WnfsFileSystem extends AbstractFileSystem {
     }
 
     const file = this.getFile(path);
-    const blob = await file.read("blob"); //eslint-disable-line
-    return URL.createObjectURL(blob); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+    const blob = await file.read("blob");
+    return URL.createObjectURL(blob);
   }
 
   public async _doHead(path: string): Promise<Stats> {
