@@ -54,9 +54,9 @@ export class WnfsFileSystem extends AbstractFileSystem {
       });
     }
 
-    const file = await this.getFile(path);
-    const blob = await file.read("blob");
-    return URL.createObjectURL(blob);
+    const file = this.getFile(path);
+    const blob = await file.read("blob"); //eslint-disable-line
+    return URL.createObjectURL(blob); // eslint-disable-line @typescript-eslint/no-unsafe-argument
   }
 
   public async _doHead(path: string): Promise<Stats> {
